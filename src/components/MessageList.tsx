@@ -50,10 +50,14 @@ export default function MessageList() {
     if (message.role !== 'user') return;
     setEditingId(message.id);
     setEditContent(message.content);
-    // 聚焦到编辑框
+    // 聚焦到编辑框，并将光标定位到内容末尾
     setTimeout(() => {
-      editTextareaRef.current?.focus();
       if (editTextareaRef.current) {
+        editTextareaRef.current.focus();
+        // 将光标定位到内容末尾
+        const length = editTextareaRef.current.value.length;
+        editTextareaRef.current.setSelectionRange(length, length);
+        // 调整高度
         editTextareaRef.current.style.height = 'auto';
         editTextareaRef.current.style.height = `${editTextareaRef.current.scrollHeight}px`;
       }
