@@ -230,9 +230,11 @@ export default function MessageList() {
                     }
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      handleResend(message.id);
+                      if (!isResending && editContent.trim()) {
+                        handleResend(message.id);
+                      }
                     }
                     if (e.key === 'Escape') {
                       handleCancelEdit();
