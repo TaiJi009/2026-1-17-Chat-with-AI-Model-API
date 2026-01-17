@@ -2,15 +2,22 @@ import { createContext, useContext, useReducer, useEffect, type ReactNode, type 
 import { AppState, AppAction } from '../types';
 import { saveState, loadState } from '../utils/storage';
 
+// 智谱AI默认API Key
+const DEFAULT_ZHIPU_API_KEY = '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB';
+
 const initialState: AppState = {
   conversations: [],
   currentConversationId: null,
-  apiConfig: null,
+  apiConfig: {
+    endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+    apiKey: DEFAULT_ZHIPU_API_KEY,
+    format: 'zhipu',
+  },
   promptConfig: {
     systemPrompt: 'You are a helpful AI assistant.',
   },
   theme: 'light',
-  sidebarCollapsed: false,
+  sidebarCollapsed: true, // 移动端默认折叠
   promptPanelCollapsed: true,
 };
 

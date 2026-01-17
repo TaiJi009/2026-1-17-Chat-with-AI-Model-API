@@ -18,10 +18,12 @@ const maskApiKey = (key: string): string => {
 
 export default function ApiConfig() {
   const { state, dispatch } = useApp();
-  const [endpoint, setEndpoint] = useState(state.apiConfig?.endpoint || '');
-  const [apiKey, setApiKey] = useState(state.apiConfig?.apiKey || '');
+  const [endpoint, setEndpoint] = useState(
+    state.apiConfig?.endpoint || 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
+  );
+  const [apiKey, setApiKey] = useState(state.apiConfig?.apiKey || DEFAULT_ZHIPU_API_KEY);
   const [isEditingApiKey, setIsEditingApiKey] = useState(false);
-  const [format, setFormat] = useState<APIFormat>(state.apiConfig?.format || 'openai');
+  const [format, setFormat] = useState<APIFormat>(state.apiConfig?.format || 'zhipu');
   const [isTesting, setIsTesting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'connected' | 'error'>('idle');
 
@@ -76,10 +78,10 @@ export default function ApiConfig() {
   };
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+    <div className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-2 sm:p-4">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-end gap-2 sm:gap-4">
+        <div className="flex-1 min-w-0 sm:min-w-[200px]">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             API Endpoint
           </label>
           <input
@@ -95,12 +97,12 @@ export default function ApiConfig() {
                 ? 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
                 : 'API endpoint URL'
             }
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <div className="flex-1 min-w-0 sm:min-w-[200px]">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             API Key
           </label>
           <input
@@ -121,12 +123,12 @@ export default function ApiConfig() {
               setIsEditingApiKey(false);
             }}
             placeholder={format === 'zhipu' && apiKey === DEFAULT_ZHIPU_API_KEY ? '默认已配置' : 'sk-...'}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        <div className="min-w-[150px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <div className="w-full sm:w-auto sm:min-w-[150px]">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Format
           </label>
           <select
@@ -150,7 +152,7 @@ export default function ApiConfig() {
                 }
               }
             }}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="openai">OpenAI</option>
             <option value="anthropic">Anthropic</option>
@@ -159,28 +161,28 @@ export default function ApiConfig() {
           </select>
         </div>
 
-        <div className="flex items-end gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={handleTest}
             disabled={isTesting || !endpoint || !apiKey}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {isTesting ? 'Testing...' : 'Test'}
           </button>
 
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base bg-green-600 text-white rounded-md hover:bg-green-700"
           >
             Save
           </button>
 
           <div className="flex items-center gap-2">
             {status === 'connected' && (
-              <span className="text-green-600 dark:text-green-400 text-sm">✓ Connected</span>
+              <span className="text-xs sm:text-sm text-green-600 dark:text-green-400">✓</span>
             )}
             {status === 'error' && (
-              <span className="text-red-600 dark:text-red-400 text-sm">✗ Error</span>
+              <span className="text-xs sm:text-sm text-red-600 dark:text-red-400">✗</span>
             )}
           </div>
         </div>

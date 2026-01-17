@@ -30,7 +30,7 @@ export default function PromptPanel() {
 
   if (state.promptPanelCollapsed) {
     return (
-      <div className="w-12 bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 flex flex-col items-center p-2">
+      <div className="hidden lg:flex w-12 bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 flex-col items-center p-2">
         <button
           onClick={() => dispatch({ type: 'TOGGLE_PROMPT_PANEL' })}
           className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded"
@@ -43,7 +43,7 @@ export default function PromptPanel() {
   }
 
   return (
-    <div className="w-96 bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 flex flex-col h-full">
+    <div className={`absolute lg:relative z-20 lg:z-auto right-0 w-full sm:w-80 lg:w-96 bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 flex flex-col h-full shadow-lg lg:shadow-none`}>
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">提示词配置</h2>

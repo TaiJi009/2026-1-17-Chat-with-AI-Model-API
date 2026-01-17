@@ -145,7 +145,7 @@ export default function MessageInput() {
   }
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+    <div className="border-t border-gray-200 dark:border-gray-700 p-2 sm:p-4">
       <div className="flex items-end gap-2">
         <div className="flex-1 relative">
           <textarea
@@ -156,28 +156,28 @@ export default function MessageInput() {
             placeholder="输入消息... (Shift+Enter 换行，Enter 发送)"
             disabled={isLoading}
             rows={1}
-            className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
         <button
           onClick={handleClear}
           disabled={isLoading || currentConversation.messages.length === 0}
-          className="p-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 sm:p-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           title="清空对话"
         >
-          <FiTrash2 className="w-5 h-5" />
+          <FiTrash2 className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={handleSend}
           disabled={!input.trim() || isLoading}
-          className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="p-2 sm:p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0"
           title="发送 (Enter)"
         >
-          <FiSend className="w-5 h-5" />
+          <FiSend className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
       {isLoading && (
-        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+        <div className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center">
           AI正在思考...
         </div>
       )}

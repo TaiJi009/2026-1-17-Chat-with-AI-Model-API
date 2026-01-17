@@ -63,7 +63,7 @@ export default function ConversationList() {
 
   if (state.sidebarCollapsed) {
     return (
-      <div className="w-16 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col items-center p-2">
+      <div className="hidden sm:flex w-16 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex-col items-center p-2">
         <button
           onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
           className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded"
@@ -83,7 +83,7 @@ export default function ConversationList() {
   }
 
   return (
-    <div className="w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
+    <div className={`absolute sm:relative z-20 sm:z-auto w-full sm:w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full ${state.sidebarCollapsed ? 'hidden sm:flex' : ''}`}>
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">会话</h2>
