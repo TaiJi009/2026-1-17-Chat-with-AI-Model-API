@@ -39,7 +39,6 @@ export default function MessageInput() {
       payload: { conversationId: currentConversation.id, message: userMessage },
     });
 
-    const userInput = input.trim();
     setInput('');
     setIsLoading(true);
 
