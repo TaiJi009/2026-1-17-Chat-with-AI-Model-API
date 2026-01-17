@@ -127,6 +127,10 @@ export default function MessageList() {
         payload: { conversationId: currentConversation.id, message: assistantMessage },
       });
 
+      // 先清除编辑状态，让消息恢复到正常显示
+      setEditingId(null);
+      setEditContent('');
+
       // 调用API
       await callAPI(
         state.apiConfig,
@@ -143,20 +147,25 @@ export default function MessageList() {
           assistantMessage.content += chunk;
         }
       );
-
-      setEditingId(null);
-      setEditContent('');
     } catch (error) {
       console.error('重新发送失败:', error);
       const errorMessage = error instanceof Error ? error.message : '重新发送失败';
       
+      // 清除编辑状态
+      setEditingId(null);
+      setEditContent('');
+      
       const assistantMessageId = `msg-${Date.now()}-assistant`;
       dispatch({
-        type: 'UPDATE_MESSAGE',
+        type: 'ADD_MESSAGE',
         payload: {
           conversationId: currentConversation.id,
-          messageId: assistantMessageId,
-          content: `错误: ${errorMessage}`,
+          message: {
+            id: assistantMessageId,
+            role: 'assistant',
+            content: `错误: ${errorMessage}`,
+            timestamp: Date.now(),
+          },
         },
       });
     } finally {
