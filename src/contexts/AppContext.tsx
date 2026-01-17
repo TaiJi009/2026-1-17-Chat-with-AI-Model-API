@@ -20,6 +20,7 @@ const initialState: AppState = {
   theme: 'light',
   sidebarCollapsed: true, // 移动端默认折叠
   promptPanelCollapsed: true,
+  editingMessageId: null,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -194,6 +195,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       theme: state.theme,
       sidebarCollapsed: state.sidebarCollapsed,
       promptPanelCollapsed: state.promptPanelCollapsed,
+      editingMessageId: state.editingMessageId,
     });
   }, [state]);
 
