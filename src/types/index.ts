@@ -42,6 +42,7 @@ export interface AppState {
   theme: 'light' | 'dark';
   sidebarCollapsed: boolean;
   promptPanelCollapsed: boolean;
+  editingMessageId: string | null; // 正在编辑的消息ID
 }
 
 export type AppAction =
@@ -52,6 +53,7 @@ export type AppAction =
   | { type: 'ADD_MESSAGE'; payload: { conversationId: string; message: Message } }
   | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string } }
   | { type: 'UPDATE_CONVERSATION_TITLE'; payload: { conversationId: string; title: string } }
+  | { type: 'DELETE_MESSAGES_AFTER'; payload: { conversationId: string; messageId: string } }
   | { type: 'CLEAR_CONVERSATION'; payload: string }
   | { type: 'SET_API_CONFIG'; payload: APIConfig | null }
   | { type: 'SET_PROMPT_CONFIG'; payload: PromptConfig }

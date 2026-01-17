@@ -97,6 +97,24 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
       };
 
+    case 'DELETE_MESSAGES_AFTER':
+      return {
+        ...state,
+        conversations: state.conversations.map(c => {
+          if (c.id !== action.payload.conversationId) return c;
+          
+          const messageIndex = c.messages.findIndex(m => m.id === action.payload.messageId);
+          if (messageIndex === -1) return c;
+          
+          // 保留该消息及之前的所有消息
+          return {
+            ...c,
+            messages: c.messages.slice(0, messageIndex + 1),
+            updatedAt: Date.now(),
+          };
+        }),
+      };
+
     case 'CLEAR_CONVERSATION':
       return {
         ...state,
