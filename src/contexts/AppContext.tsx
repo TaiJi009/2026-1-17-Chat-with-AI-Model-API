@@ -14,7 +14,7 @@ const initialState: AppState = {
     format: 'zhipu',
   },
   promptConfig: {
-    systemPrompt: 'You are a helpful AI assistant.',
+    systemPrompt: '你是非常厉害的通用AI助手，会将用户的问题进行结构化回答，并运用丰富的图标放在观点标题的前面，图标如✅🎁⭐等等',
   },
   theme: 'light',
   sidebarCollapsed: true, // 移动端默认折叠

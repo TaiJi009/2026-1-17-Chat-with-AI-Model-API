@@ -21,7 +21,7 @@ export default function PromptPanel() {
   const handleReset = () => {
     if (confirm('确定要重置为默认提示词吗？')) {
       const defaultConfig: PromptConfig = {
-        systemPrompt: 'You are a helpful AI assistant.',
+        systemPrompt: '你是非常厉害的通用AI助手，会将用户的问题进行结构化回答，并运用丰富的图标放在观点标题的前面，图标如✅🎁⭐等等',
       };
       setSystemPrompt(defaultConfig.systemPrompt);
       dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
