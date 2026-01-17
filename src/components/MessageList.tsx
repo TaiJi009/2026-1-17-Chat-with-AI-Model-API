@@ -1,14 +1,15 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import { useApp } from '../contexts/AppContext';
-import { FiUser, FiMessageCircle } from 'react-icons/fi';
+import { FiUser, FiMessageCircle, FiCopy, FiCheck } from 'react-icons/fi';
 
 export default function MessageList() {
   const { state } = useApp();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const currentConversation = state.conversations.find(
     c => c.id === state.currentConversationId
@@ -25,6 +26,18 @@ export default function MessageList() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const handleCopy = async (content: string, messageId: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(messageId);
+      setTimeout(() => {
+        setCopiedId(null);
+      }, 2000);
+    } catch (err) {
+      console.error('复制失败:', err);
+    }
   };
 
   if (!currentConversation) {
@@ -65,7 +78,7 @@ export default function MessageList() {
           )}
 
           <div
-            className={`max-w-[85%] sm:max-w-3xl rounded-lg p-2 sm:p-4 text-sm sm:text-base ${
+            className={`max-w-[85%] sm:max-w-3xl rounded-lg p-2 sm:p-4 text-sm sm:text-base relative group ${
               message.role === 'user'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
@@ -97,14 +110,31 @@ export default function MessageList() {
                 {message.content}
               </ReactMarkdown>
             </div>
-            <div
-              className={`text-xs mt-2 ${
-                message.role === 'user'
-                  ? 'text-blue-100'
-                  : 'text-gray-500 dark:text-gray-400'
-              }`}
-            >
-              {formatTime(message.timestamp)}
+            <div className="flex items-center justify-between mt-2">
+              <div
+                className={`text-xs ${
+                  message.role === 'user'
+                    ? 'text-blue-100'
+                    : 'text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {formatTime(message.timestamp)}
+              </div>
+              <button
+                onClick={() => handleCopy(message.content, message.id)}
+                className={`ml-2 p-1.5 rounded hover:bg-opacity-20 transition-all ${
+                  message.role === 'user'
+                    ? 'hover:bg-white text-blue-100 hover:text-white'
+                    : 'hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                }`}
+                title="复制消息"
+              >
+                {copiedId === message.id ? (
+                  <FiCheck className="w-4 h-4" />
+                ) : (
+                  <FiCopy className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 
