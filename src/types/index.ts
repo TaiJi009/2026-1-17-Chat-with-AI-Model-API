@@ -13,7 +13,7 @@ export interface Conversation {
   updatedAt: number;
 }
 
-export type APIFormat = 'openai' | 'anthropic' | 'custom';
+export type APIFormat = 'openai' | 'anthropic' | 'zhipu' | 'custom';
 
 export interface CustomAPIConfig {
   requestMethod?: string;

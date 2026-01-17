@@ -90,6 +90,92 @@ export const callOpenAIAPI = async (
   }
 };
 
+export const callZhipuAPI = async (
+  config: APIConfig,
+  messages: Message[],
+  onChunk?: (chunk: string) => void
+): Promise<string> => {
+  if (!config.endpoint || !config.apiKey) {
+    throw new Error('API endpoint and API key are required');
+  }
+
+  // Separate system messages from conversation messages
+  const systemMessages = messages.filter(msg => msg.role === 'system');
+  const conversationMessages = messages.filter(msg => msg.role !== 'system');
+  
+  // Combine system messages into one if multiple exist
+  const systemContent = systemMessages.map(m => m.content).join('\n\n');
+  const apiMessages = systemContent
+    ? [{ role: 'system' as const, content: systemContent }, ...conversationMessages.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+      }))]
+    : conversationMessages.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+      }));
+
+  const response = await fetch(config.endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'glm-4',
+      messages: apiMessages,
+      stream: !!onChunk,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
+    throw new Error(error.error?.message || 'API request failed');
+  }
+
+  if (onChunk && response.body) {
+    // Handle streaming response (SSE format)
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullContent = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') {
+            return fullContent;
+          }
+
+          try {
+            const json = JSON.parse(data);
+            // 智谱AI的流式响应格式
+            const content = json.choices?.[0]?.delta?.content || json.choices?.[0]?.delta?.text || '';
+            if (content) {
+              fullContent += content;
+              onChunk(content);
+            }
+          } catch (e) {
+            // Ignore parsing errors for incomplete chunks
+          }
+        }
+      }
+    }
+
+    return fullContent;
+  } else {
+    // Handle non-streaming response
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.text || '';
+  }
+};
+
 export const callAnthropicAPI = async (
   config: APIConfig,
   messages: Message[],
@@ -186,6 +272,8 @@ export const callAPI = async (
       return callOpenAIAPI(config, messages, onChunk);
     case 'anthropic':
       return callAnthropicAPI(config, messages, onChunk);
+    case 'zhipu':
+      return callZhipuAPI(config, messages, onChunk);
     case 'custom':
       throw new Error('Custom API format not yet implemented');
     default:

@@ -64,7 +64,15 @@ export default function ApiConfig() {
             type="text"
             value={endpoint}
             onChange={(e) => setEndpoint(e.target.value)}
-            placeholder="https://api.openai.com/v1/chat/completions"
+            placeholder={
+              format === 'openai'
+                ? 'https://api.openai.com/v1/chat/completions'
+                : format === 'anthropic'
+                ? 'https://api.anthropic.com/v1/messages'
+                : format === 'zhipu'
+                ? 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
+                : 'API endpoint URL'
+            }
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -88,11 +96,25 @@ export default function ApiConfig() {
           </label>
           <select
             value={format}
-            onChange={(e) => setFormat(e.target.value as APIFormat)}
+            onChange={(e) => {
+              const newFormat = e.target.value as APIFormat;
+              setFormat(newFormat);
+              // Set default endpoint based on format
+              if (!endpoint || endpoint === state.apiConfig?.endpoint) {
+                if (newFormat === 'openai') {
+                  setEndpoint('https://api.openai.com/v1/chat/completions');
+                } else if (newFormat === 'anthropic') {
+                  setEndpoint('https://api.anthropic.com/v1/messages');
+                } else if (newFormat === 'zhipu') {
+                  setEndpoint('https://open.bigmodel.cn/api/paas/v4/chat/completions');
+                }
+              }
+            }}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="openai">OpenAI</option>
             <option value="anthropic">Anthropic</option>
+            <option value="zhipu">智谱AI (ZhipuAI)</option>
             <option value="custom">Custom</option>
           </select>
         </div>
