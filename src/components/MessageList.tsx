@@ -1,0 +1,119 @@
+import React, { useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useApp } from '../contexts/AppContext';
+import { FiUser, FiBot } from 'react-icons/fi';
+
+export default function MessageList() {
+  const { state } = useApp();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const currentConversation = state.conversations.find(
+    c => c.id === state.currentConversationId
+  );
+
+  const messages = currentConversation?.messages || [];
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const formatTime = (timestamp: number) => {
+    return new Date(timestamp).toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  if (!currentConversation) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+        <div className="text-center">
+          <p className="text-lg mb-2">选择一个会话开始对话</p>
+          <p className="text-sm">或创建一个新会话</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (messages.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+        <div className="text-center">
+          <p className="text-lg mb-2">开始新的对话</p>
+          <p className="text-sm">在下方输入框中输入消息</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {messages.map((message) => (
+        <div
+          key={message.id}
+          className={`flex gap-4 ${
+            message.role === 'user' ? 'justify-end' : 'justify-start'
+          }`}
+        >
+          {message.role === 'assistant' && (
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
+              <FiBot className="w-5 h-5 text-white" />
+            </div>
+          )}
+
+          <div
+            className={`max-w-3xl rounded-lg p-4 ${
+              message.role === 'user'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+            }`}
+          >
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown
+                components={{
+                  code({ node, inline, className, children, ...props }) {
+                    const match = /language-(\w+)/.exec(className || '');
+                    return !inline && match ? (
+                      <SyntaxHighlighter
+                        style={state.theme === 'dark' ? vscDarkPlus : vs}
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {String(children).replace(/\n$/, '')}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  },
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
+            <div
+              className={`text-xs mt-2 ${
+                message.role === 'user'
+                  ? 'text-blue-100'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              {formatTime(message.timestamp)}
+            </div>
+          </div>
+
+          {message.role === 'user' && (
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-400 dark:bg-gray-600 flex items-center justify-center">
+              <FiUser className="w-5 h-5 text-white" />
+            </div>
+          )}
+        </div>
+      ))}
+      <div ref={messagesEndRef} />
+    </div>
+  );
+}
