@@ -3,7 +3,6 @@ import type { KeyboardEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { Message } from '../types';
 import { callAPI } from '../utils/api';
-import { parseTemplate } from '../utils/promptTemplate';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
 
 export default function MessageInput() {
@@ -45,13 +44,6 @@ export default function MessageInput() {
     setIsLoading(true);
 
     try {
-      // Apply prompt template
-      const finalUserContent = parseTemplate(state.promptConfig.userPromptTemplate, {
-        user_input: userInput,
-        date: new Date().toLocaleDateString('zh-CN'),
-        time: new Date().toLocaleTimeString('zh-CN'),
-      });
-
       // Build messages array
       const messages: Message[] = [];
       
@@ -68,11 +60,8 @@ export default function MessageInput() {
       // Add conversation history (excluding system messages as they're already handled)
       messages.push(...currentConversation.messages.filter(m => m.role !== 'system'));
 
-      // Add new user message with template applied
-      messages.push({
-        ...userMessage,
-        content: finalUserContent,
-      });
+      // Add new user message (no template processing)
+      messages.push(userMessage);
 
       // Create assistant message
       const assistantMessageId = `msg-${Date.now()}-assistant`;

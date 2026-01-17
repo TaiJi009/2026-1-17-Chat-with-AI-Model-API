@@ -1,15 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { APIConfig, APIFormat } from '../types';
 import { callAPI } from '../utils/api';
+
+// 智谱AI默认API Key
+const DEFAULT_ZHIPU_API_KEY = '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB';
+
+// 隐藏API Key显示
+const maskApiKey = (key: string): string => {
+  if (!key) return '';
+  if (key === DEFAULT_ZHIPU_API_KEY) {
+    return '••••••••••••••••••••••••••••••••';
+  }
+  if (key.length <= 8) return '•'.repeat(key.length);
+  return key.substring(0, 4) + '•'.repeat(key.length - 8) + key.substring(key.length - 4);
+};
 
 export default function ApiConfig() {
   const { state, dispatch } = useApp();
   const [endpoint, setEndpoint] = useState(state.apiConfig?.endpoint || '');
   const [apiKey, setApiKey] = useState(state.apiConfig?.apiKey || '');
+  const [isEditingApiKey, setIsEditingApiKey] = useState(false);
   const [format, setFormat] = useState<APIFormat>(state.apiConfig?.format || 'openai');
   const [isTesting, setIsTesting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'connected' | 'error'>('idle');
+
+  // 当格式改变时，如果是智谱AI且没有API Key，设置默认值
+  useEffect(() => {
+    if (format === 'zhipu' && !apiKey) {
+      setApiKey(DEFAULT_ZHIPU_API_KEY);
+      setIsEditingApiKey(false);
+    }
+  }, [format, apiKey]);
 
   const handleSave = () => {
     const config: APIConfig = {
@@ -83,9 +105,22 @@ export default function ApiConfig() {
           </label>
           <input
             type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="sk-..."
+            value={isEditingApiKey ? apiKey : (apiKey ? maskApiKey(apiKey) : '')}
+            onChange={(e) => {
+              setApiKey(e.target.value);
+              setIsEditingApiKey(true);
+            }}
+            onFocus={() => {
+              setIsEditingApiKey(true);
+            }}
+            onBlur={(e) => {
+              // 失去焦点时，如果是zhipu格式且输入为空，恢复默认值
+              if (!e.target.value && format === 'zhipu') {
+                setApiKey(DEFAULT_ZHIPU_API_KEY);
+              }
+              setIsEditingApiKey(false);
+            }}
+            placeholder={format === 'zhipu' && apiKey === DEFAULT_ZHIPU_API_KEY ? '默认已配置' : 'sk-...'}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -107,6 +142,11 @@ export default function ApiConfig() {
                   setEndpoint('https://api.anthropic.com/v1/messages');
                 } else if (newFormat === 'zhipu') {
                   setEndpoint('https://open.bigmodel.cn/api/paas/v4/chat/completions');
+                  // 如果切换到智谱AI且没有API Key，设置默认值
+                  if (!apiKey) {
+                    setApiKey(DEFAULT_ZHIPU_API_KEY);
+                    setIsEditingApiKey(false);
+                  }
                 }
               }
             }}

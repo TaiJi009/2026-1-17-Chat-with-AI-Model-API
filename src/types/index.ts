@@ -31,7 +31,6 @@ export interface APIConfig {
 
 export interface PromptConfig {
   systemPrompt: string;
-  userPromptTemplate: string;
 }
 
 export interface AppState {

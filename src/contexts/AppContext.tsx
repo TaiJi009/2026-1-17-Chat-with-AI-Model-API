@@ -8,7 +8,6 @@ const initialState: AppState = {
   apiConfig: null,
   promptConfig: {
     systemPrompt: 'You are a helpful AI assistant.',
-    userPromptTemplate: '{{user_input}}',
   },
   theme: 'light',
   sidebarCollapsed: false,
