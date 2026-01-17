@@ -11,6 +11,7 @@ export interface Conversation {
   messages: Message[];
   createdAt: number;
   updatedAt: number;
+  isManuallyRenamed?: boolean; // 标记是否手动重命名过
 }
 
 export type APIFormat = 'openai' | 'anthropic' | 'zhipu' | 'custom';
@@ -50,6 +51,7 @@ export type AppAction =
   | { type: 'SET_CURRENT_CONVERSATION'; payload: string | null }
   | { type: 'ADD_MESSAGE'; payload: { conversationId: string; message: Message } }
   | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string } }
+  | { type: 'UPDATE_CONVERSATION_TITLE'; payload: { conversationId: string; title: string } }
   | { type: 'CLEAR_CONVERSATION'; payload: string }
   | { type: 'SET_API_CONFIG'; payload: APIConfig | null }
   | { type: 'SET_PROMPT_CONFIG'; payload: PromptConfig }

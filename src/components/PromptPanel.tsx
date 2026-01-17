@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { PromptConfig } from '../types';
 import { FiX, FiChevronLeft, FiSave, FiRefreshCw } from 'react-icons/fi';
+import { getDefaultSystemPrompt, getDefaultSystemPromptSync } from '../utils/defaultSystemPrompt';
 
 export default function PromptPanel() {
   const { state, dispatch } = useApp();
@@ -18,13 +19,25 @@ export default function PromptPanel() {
     dispatch({ type: 'SET_PROMPT_CONFIG', payload: config });
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (confirm('确定要重置为默认提示词吗？')) {
-      const defaultConfig: PromptConfig = {
-        systemPrompt: '你是非常厉害的通用AI助手，会将用户的问题进行结构化回答，并运用丰富的图标放在观点标题的前面，图标如✅🎁⭐等等',
-      };
-      setSystemPrompt(defaultConfig.systemPrompt);
-      dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
+      try {
+        // 尝试从文件读取最新的默认提示词
+        const defaultPrompt = await getDefaultSystemPrompt();
+        const defaultConfig: PromptConfig = {
+          systemPrompt: defaultPrompt,
+        };
+        setSystemPrompt(defaultConfig.systemPrompt);
+        dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
+      } catch (error) {
+        // 如果读取失败，使用同步的默认值
+        const defaultPrompt = getDefaultSystemPromptSync();
+        const defaultConfig: PromptConfig = {
+          systemPrompt: defaultPrompt,
+        };
+        setSystemPrompt(defaultConfig.systemPrompt);
+        dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
+      }
     }
   };
 
@@ -86,6 +99,10 @@ export default function PromptPanel() {
           />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             用于定义AI的角色、行为和边界。系统提示词会在每次对话开始时发送给AI模型。
+            <br />
+            <span className="text-blue-600 dark:text-blue-400">
+              💡 默认提示词来自 <code>prompt-engineering/real-readme.md</code>，点击重置按钮可同步最新版本。
+            </span>
           </p>
         </div>
       </div>

@@ -42,7 +42,7 @@ export default function ConversationList() {
     if (conversation && editName.trim()) {
       dispatch({
         type: 'UPDATE_CONVERSATION',
-        payload: { ...conversation, name: editName.trim() },
+        payload: { ...conversation, name: editName.trim(), isManuallyRenamed: true },
       });
     }
     setEditingId(null);

@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { Message } from '../types';
 import { callAPI } from '../utils/api';
+import { generateTitle } from '../utils/titleGenerator';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
 
 export default function MessageInput() {
@@ -76,6 +77,10 @@ export default function MessageInput() {
         payload: { conversationId: currentConversation.id, message: assistantMessage },
       });
 
+      // 记录发送前的消息数量，用于判断是否是第一轮对话
+      const messagesBeforeSend = currentConversation.messages.filter(m => m.role !== 'system');
+      const isFirstRound = messagesBeforeSend.length === 0;
+
       // Call API with streaming
       await callAPI(
         state.apiConfig,
@@ -92,6 +97,20 @@ export default function MessageInput() {
           assistantMessage.content += chunk;
         }
       );
+
+      // 检测第一轮对话完成并自动生成标题
+      // 第一轮对话：发送前没有消息（不包括system消息），且未手动重命名
+      if (isFirstRound && !currentConversation.isManuallyRenamed) {
+        const autoTitle = generateTitle(userMessage.content, assistantMessage.content);
+        
+        dispatch({
+          type: 'UPDATE_CONVERSATION_TITLE',
+          payload: {
+            conversationId: currentConversation.id,
+            title: autoTitle,
+          },
+        });
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage = error instanceof Error ? error.message : '发送消息失败';

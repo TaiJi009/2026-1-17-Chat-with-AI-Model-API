@@ -1,6 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, type ReactNode, type Dispatch } from 'react';
 import { AppState, AppAction } from '../types';
 import { saveState, loadState } from '../utils/storage';
+import { getDefaultSystemPromptSync } from '../utils/defaultSystemPrompt';
 
 // 智谱AI默认API Key
 const DEFAULT_ZHIPU_API_KEY = '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB';
@@ -14,7 +15,7 @@ const initialState: AppState = {
     format: 'zhipu',
   },
   promptConfig: {
-    systemPrompt: '你是非常厉害的通用AI助手，会将用户的问题进行结构化回答，并运用丰富的图标放在观点标题的前面，图标如✅🎁⭐等等',
+    systemPrompt: getDefaultSystemPromptSync(),
   },
   theme: 'light',
   sidebarCollapsed: true, // 移动端默认折叠
@@ -86,11 +87,23 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
       };
 
+    case 'UPDATE_CONVERSATION_TITLE':
+      return {
+        ...state,
+        conversations: state.conversations.map(c =>
+          c.id === action.payload.conversationId && !c.isManuallyRenamed
+            ? { ...c, name: action.payload.title, updatedAt: Date.now() }
+            : c
+        ),
+      };
+
     case 'CLEAR_CONVERSATION':
       return {
         ...state,
         conversations: state.conversations.map(c =>
-          c.id === action.payload ? { ...c, messages: [], updatedAt: Date.now() } : c
+          c.id === action.payload 
+            ? { ...c, messages: [], updatedAt: Date.now(), isManuallyRenamed: false } 
+            : c
         ),
       };
 
