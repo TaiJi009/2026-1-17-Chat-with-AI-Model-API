@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { APIConfig, APIFormat } from '../types';
 import { callAPI } from '../utils/api';

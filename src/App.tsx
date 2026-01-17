@@ -1,4 +1,3 @@
-import React from 'react';
 import { AppProvider } from './contexts/AppContext';
 import ApiConfig from './components/ApiConfig';
 import ConversationList from './components/ConversationList';

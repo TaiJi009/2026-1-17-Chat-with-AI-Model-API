@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import { useApp } from '../contexts/AppContext';
-import { FiUser, FiBot } from 'react-icons/fi';
+import { FiUser, FiMessageCircle } from 'react-icons/fi';
 
 export default function MessageList() {
   const { state } = useApp();
@@ -59,7 +60,7 @@ export default function MessageList() {
         >
           {message.role === 'assistant' && (
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
-              <FiBot className="w-5 h-5 text-white" />
+              <FiMessageCircle className="w-5 h-5 text-white" />
             </div>
           )}
 
@@ -73,14 +74,15 @@ export default function MessageList() {
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <ReactMarkdown
                 components={{
-                  code({ node, inline, className, children, ...props }) {
+                  code({ className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || '');
+                    const inline = !match;
                     return !inline && match ? (
                       <SyntaxHighlighter
                         style={state.theme === 'dark' ? vscDarkPlus : vs}
                         language={match[1]}
                         PreTag="div"
-                        {...props}
+                        {...(props as SyntaxHighlighterProps)}
                       >
                         {String(children).replace(/\n$/, '')}
                       </SyntaxHighlighter>

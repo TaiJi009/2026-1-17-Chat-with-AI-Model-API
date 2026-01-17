@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { MouseEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { Conversation } from '../types';
 import { FiPlus, FiX, FiMessageSquare } from 'react-icons/fi';
@@ -19,7 +20,7 @@ export default function ConversationList() {
     dispatch({ type: 'ADD_CONVERSATION', payload: newConversation });
   };
 
-  const handleDeleteConversation = (id: string, e: React.MouseEvent) => {
+  const handleDeleteConversation = (id: string, e: MouseEvent) => {
     e.stopPropagation();
     if (confirm('确定要删除这个会话吗？')) {
       dispatch({ type: 'DELETE_CONVERSATION', payload: id });
@@ -30,7 +31,7 @@ export default function ConversationList() {
     dispatch({ type: 'SET_CURRENT_CONVERSATION', payload: id });
   };
 
-  const handleStartEdit = (conversation: Conversation, e: React.MouseEvent) => {
+  const handleStartEdit = (conversation: Conversation, e: MouseEvent) => {
     e.stopPropagation();
     setEditingId(conversation.id);
     setEditName(conversation.name);

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useReducer, useEffect, type ReactNode, type Dispatch } from 'react';
 import { AppState, AppAction } from '../types';
 import { saveState, loadState } from '../utils/storage';
 
@@ -131,7 +131,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 interface AppContextType {
   state: AppState;
-  dispatch: React.Dispatch<AppAction>;
+  dispatch: Dispatch<AppAction>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);

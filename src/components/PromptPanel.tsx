@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { PromptConfig } from '../types';
 import { parseTemplate, extractVariables } from '../utils/promptTemplate';
