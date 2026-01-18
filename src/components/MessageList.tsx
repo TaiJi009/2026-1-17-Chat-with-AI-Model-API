@@ -93,14 +93,22 @@ function StreamingMarkdown({
   // 如果不在流式状态或内容已全部显示，直接返回完整内容
   const contentToRender = isStreaming ? displayedContent : content;
   const showCursor = isStreaming && displayedContent.length < content.length;
+  // 当内容为空且正在流式处理时，显示"AI正在思考..."
+  const showThinking = isStreaming && (content === '' || displayedContent.length === 0);
 
   return (
     <>
-      <ReactMarkdown components={components}>
-        {contentToRender}
-      </ReactMarkdown>
-      {showCursor && (
-        <span className="inline-block ml-1 text-gray-400 dark:text-gray-500 animate-pulse">·</span>
+      {showThinking ? (
+        <span className="text-gray-500 dark:text-gray-400 italic">AI正在思考...</span>
+      ) : (
+        <>
+          <ReactMarkdown components={components}>
+            {contentToRender}
+          </ReactMarkdown>
+          {showCursor && (
+            <span className="inline-block ml-1 text-gray-400 dark:text-gray-500 animate-pulse">·</span>
+          )}
+        </>
       )}
     </>
   );
