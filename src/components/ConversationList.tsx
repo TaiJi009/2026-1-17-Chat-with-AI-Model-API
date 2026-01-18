@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { MouseEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { Conversation } from '../types';
-import { FiPlus, FiX, FiMessageSquare, FiMoreVertical, FiEdit2, FiStar, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiX, FiMessageSquare, FiMoreVertical, FiEdit2, FiPin, FiTrash2 } from 'react-icons/fi';
 
 export default function ConversationList() {
   const { state, dispatch } = useApp();
@@ -191,7 +191,7 @@ export default function ConversationList() {
                         <div className="flex items-center gap-1">
                           <div className="font-medium text-sm truncate">{conversation.name}</div>
                           {conversation.isPinned && (
-                            <FiStar className="w-3 h-3 flex-shrink-0 text-blue-600 dark:text-blue-400 fill-current" />
+                            <FiPin className="w-3 h-3 flex-shrink-0 text-blue-600 dark:text-blue-400" />
                           )}
                         </div>
                         <div className="text-xs mt-1 opacity-70">
@@ -226,7 +226,7 @@ export default function ConversationList() {
                               onClick={(e) => handleTogglePin(conversation.id, e)}
                               className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                             >
-                              <FiStar className={`w-4 h-4 ${conversation.isPinned ? 'text-blue-600 dark:text-blue-400 fill-current' : ''}`} />
+                              <FiPin className={`w-4 h-4 ${conversation.isPinned ? 'text-blue-600 dark:text-blue-400' : ''}`} />
                               {conversation.isPinned ? '取消置顶' : '置顶'}
                             </button>
                             <button
