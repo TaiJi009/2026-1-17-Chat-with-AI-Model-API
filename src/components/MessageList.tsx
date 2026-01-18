@@ -14,12 +14,10 @@ import { Message } from '../types';
 function StreamingMarkdown({ 
   content, 
   isStreaming, 
-  theme,
   components 
 }: { 
   content: string; 
   isStreaming?: boolean;
-  theme: 'light' | 'dark';
   components: any;
 }) {
   const [displayedContent, setDisplayedContent] = useState('');
@@ -423,9 +421,8 @@ export default function MessageList() {
                       <StreamingMarkdown
                         content={message.content}
                         isStreaming={message.isStreaming}
-                        theme={state.theme}
                         components={{
-                          code({ className, children, ...props }) {
+                          code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: any }) {
                             const match = /language-(\w+)/.exec(className || '');
                             const inline = !match;
                             return !inline && match ? (
@@ -448,7 +445,7 @@ export default function MessageList() {
                     ) : (
                       <ReactMarkdown
                         components={{
-                          code({ className, children, ...props }) {
+                          code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: any }) {
                             const match = /language-(\w+)/.exec(className || '');
                             const inline = !match;
                             return !inline && match ? (
