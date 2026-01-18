@@ -6,6 +6,8 @@ import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import { useApp } from '../contexts/AppContext';
 import { FiUser, FiMessageCircle, FiCopy, FiCheck, FiEdit2, FiSend, FiX } from 'react-icons/fi';
 import { callModelAPI } from '../utils/apiService';
+import { parseAIResponse } from '../utils/responseParser';
+import ThinkingDisplay from './ThinkingDisplay';
 import { Message } from '../types';
 
 export default function MessageList() {
@@ -276,32 +278,42 @@ export default function MessageList() {
               </div>
             ) : (
               <>
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <ReactMarkdown
-                    components={{
-                      code({ className, children, ...props }) {
-                        const match = /language-(\w+)/.exec(className || '');
-                        const inline = !match;
-                        return !inline && match ? (
-                          <SyntaxHighlighter
-                            style={state.theme === 'dark' ? vscDarkPlus : vs}
-                            language={match[1]}
-                            PreTag="div"
-                            {...(props as SyntaxHighlighterProps)}
-                          >
-                            {String(children).replace(/\n$/, '')}
-                          </SyntaxHighlighter>
-                        ) : (
-                          <code className={className} {...props}>
-                            {children}
-                          </code>
-                        );
-                      },
-                    }}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
-                </div>
+                {/* AI消息：如果包含思维链和回答，使用ThinkingDisplay；否则使用传统显示 */}
+                {message.role === 'assistant' && (message.thinkingChain || message.answer || message.content.match(/<思维链>|<回答>/)) ? (
+                  <ThinkingDisplay
+                    thinkingChain={message.thinkingChain || parseAIResponse(message.content).thinkingChain}
+                    answer={message.answer || parseAIResponse(message.content).answer}
+                    isStreaming={message.isStreaming}
+                    theme={state.theme}
+                  />
+                ) : (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <ReactMarkdown
+                      components={{
+                        code({ className, children, ...props }) {
+                          const match = /language-(\w+)/.exec(className || '');
+                          const inline = !match;
+                          return !inline && match ? (
+                            <SyntaxHighlighter
+                              style={state.theme === 'dark' ? vscDarkPlus : vs}
+                              language={match[1]}
+                              PreTag="div"
+                              {...(props as SyntaxHighlighterProps)}
+                            >
+                              {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
                 <div className="flex items-center justify-between mt-2">
                   <div
                     className={`text-xs ${

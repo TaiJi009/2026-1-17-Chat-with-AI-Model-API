@@ -3,6 +3,9 @@ export interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: number;
+  thinkingChain?: string; // AI的思维链内容
+  answer?: string; // AI的回答内容
+  isStreaming?: boolean; // 是否正在流式输出
 }
 
 export interface Conversation {
