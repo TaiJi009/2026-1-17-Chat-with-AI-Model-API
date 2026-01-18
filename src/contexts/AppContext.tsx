@@ -3,17 +3,10 @@ import { AppState, AppAction } from '../types';
 import { saveState, loadState } from '../utils/storage';
 import { getDefaultSystemPromptSync } from '../utils/defaultSystemPrompt';
 
-// 智谱AI默认API Key
-const DEFAULT_ZHIPU_API_KEY = '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB';
-
 const initialState: AppState = {
   conversations: [],
   currentConversationId: null,
-  apiConfig: {
-    endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-    apiKey: DEFAULT_ZHIPU_API_KEY,
-    format: 'zhipu',
-  },
+  n8nWebhookUrl: '', // 需要用户配置n8n webhook URL
   promptConfig: {
     systemPrompt: getDefaultSystemPromptSync(),
   },
@@ -126,10 +119,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
       };
 
-    case 'SET_API_CONFIG':
+    case 'SET_N8N_WEBHOOK_URL':
       return {
         ...state,
-        apiConfig: action.payload,
+        n8nWebhookUrl: action.payload,
       };
 
     case 'SET_PROMPT_CONFIG':
@@ -190,7 +183,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saveState({
       conversations: state.conversations,
       currentConversationId: state.currentConversationId,
-      apiConfig: state.apiConfig,
+      n8nWebhookUrl: state.n8nWebhookUrl,
       promptConfig: state.promptConfig,
       theme: state.theme,
       sidebarCollapsed: state.sidebarCollapsed,

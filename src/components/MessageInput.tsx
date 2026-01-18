@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { Message } from '../types';
-import { callAPI } from '../utils/api';
+import { callN8NWebhook } from '../utils/n8nWebhook';
 import { generateTitle } from '../utils/titleGenerator';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
 
@@ -24,7 +24,7 @@ export default function MessageInput() {
   }, [input]);
 
   const handleSend = async () => {
-    if (!input.trim() || !currentConversation || !state.apiConfig || isLoading) {
+    if (!input.trim() || !currentConversation || !state.n8nWebhookUrl || isLoading) {
       return;
     }
 
@@ -81,22 +81,24 @@ export default function MessageInput() {
       const messagesBeforeSend = currentConversation.messages.filter(m => m.role !== 'system');
       const isFirstRound = messagesBeforeSend.length === 0;
 
-      // Call API with streaming
-      await callAPI(
-        state.apiConfig,
+      // Call n8n webhook
+      const responseContent = await callN8NWebhook(
+        state.n8nWebhookUrl,
+        currentConversation.id,
         messages,
-        (chunk) => {
-          dispatch({
-            type: 'UPDATE_MESSAGE',
-            payload: {
-              conversationId: currentConversation.id,
-              messageId: assistantMessageId,
-              content: assistantMessage.content + chunk,
-            },
-          });
-          assistantMessage.content += chunk;
-        }
+        state.promptConfig.systemPrompt.trim() || undefined
       );
+
+      // Update assistant message with response
+      dispatch({
+        type: 'UPDATE_MESSAGE',
+        payload: {
+          conversationId: currentConversation.id,
+          messageId: assistantMessageId,
+          content: responseContent,
+        },
+      });
+      assistantMessage.content = responseContent;
 
       // 检测第一轮对话完成并自动生成标题
       // 第一轮对话：发送前没有消息（不包括system消息），且未手动重命名
@@ -155,10 +157,10 @@ export default function MessageInput() {
     );
   }
 
-  if (!state.apiConfig) {
+  if (!state.n8nWebhookUrl) {
     return (
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400">
-        请先配置API连接
+        请先在提示词配置面板中设置n8n webhook URL
       </div>
     );
   }

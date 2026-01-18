@@ -14,22 +14,6 @@ export interface Conversation {
   isManuallyRenamed?: boolean; // 标记是否手动重命名过
 }
 
-export type APIFormat = 'openai' | 'anthropic' | 'zhipu' | 'custom';
-
-export interface CustomAPIConfig {
-  requestMethod?: string;
-  requestHeaders?: Record<string, string>;
-  requestBodyTemplate?: string;
-  responsePath?: string;
-}
-
-export interface APIConfig {
-  endpoint: string;
-  apiKey?: string;
-  format: APIFormat;
-  customConfig?: CustomAPIConfig;
-}
-
 export interface PromptConfig {
   systemPrompt: string;
 }
@@ -37,7 +21,7 @@ export interface PromptConfig {
 export interface AppState {
   conversations: Conversation[];
   currentConversationId: string | null;
-  apiConfig: APIConfig | null;
+  n8nWebhookUrl: string; // n8n webhook URL
   promptConfig: PromptConfig;
   theme: 'light' | 'dark';
   sidebarCollapsed: boolean;
@@ -55,7 +39,7 @@ export type AppAction =
   | { type: 'UPDATE_CONVERSATION_TITLE'; payload: { conversationId: string; title: string } }
   | { type: 'DELETE_MESSAGES_AFTER'; payload: { conversationId: string; messageId: string } }
   | { type: 'CLEAR_CONVERSATION'; payload: string }
-  | { type: 'SET_API_CONFIG'; payload: APIConfig | null }
+  | { type: 'SET_N8N_WEBHOOK_URL'; payload: string }
   | { type: 'SET_PROMPT_CONFIG'; payload: PromptConfig }
   | { type: 'SET_THEME'; payload: 'light' | 'dark' }
   | { type: 'TOGGLE_SIDEBAR' }

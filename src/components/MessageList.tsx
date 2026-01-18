@@ -5,7 +5,7 @@ import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import { useApp } from '../contexts/AppContext';
 import { FiUser, FiMessageCircle, FiCopy, FiCheck, FiEdit2, FiSend, FiX } from 'react-icons/fi';
-import { callAPI } from '../utils/api';
+import { callN8NWebhook } from '../utils/n8nWebhook';
 import { Message } from '../types';
 
 export default function MessageList() {
@@ -70,7 +70,7 @@ export default function MessageList() {
   };
 
   const handleResend = async (messageId: string) => {
-    if (!currentConversation || !state.apiConfig || isResending || !editContent.trim()) {
+    if (!currentConversation || !state.n8nWebhookUrl || isResending || !editContent.trim()) {
       return;
     }
 
@@ -135,22 +135,24 @@ export default function MessageList() {
       setEditingId(null);
       setEditContent('');
 
-      // 调用API
-      await callAPI(
-        state.apiConfig,
+      // 调用n8n webhook
+      const responseContent = await callN8NWebhook(
+        state.n8nWebhookUrl,
+        currentConversation.id,
         messagesToSend,
-        (chunk) => {
-          dispatch({
-            type: 'UPDATE_MESSAGE',
-            payload: {
-              conversationId: currentConversation.id,
-              messageId: assistantMessageId,
-              content: assistantMessage.content + chunk,
-            },
-          });
-          assistantMessage.content += chunk;
-        }
+        state.promptConfig.systemPrompt.trim() || undefined
       );
+
+      // Update assistant message with response
+      dispatch({
+        type: 'UPDATE_MESSAGE',
+        payload: {
+          conversationId: currentConversation.id,
+          messageId: assistantMessageId,
+          content: responseContent,
+        },
+      });
+      assistantMessage.content = responseContent;
     } catch (error) {
       console.error('重新发送失败:', error);
       const errorMessage = error instanceof Error ? error.message : '重新发送失败';
