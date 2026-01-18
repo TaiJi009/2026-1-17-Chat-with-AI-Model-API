@@ -141,31 +141,31 @@ export default function ConversationList() {
                         </button>
                         
                         {menuOpenId === conversation.id && (
-                          <div className="conversation-menu absolute right-0 top-8 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-[120px]">
+                          <div className="conversation-menu absolute right-0 top-8 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 w-auto min-w-[100px] max-w-[200px]">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleStartEdit(conversation, e);
                                 setMenuOpenId(null);
                               }}
-                              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 whitespace-nowrap"
                             >
-                              <FiEdit2 className="w-4 h-4" />
-                              重命名
+                              <FiEdit2 className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">重命名</span>
                             </button>
                             <button
                               onClick={(e) => handleTogglePin(conversation.id, e)}
-                              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 whitespace-nowrap"
                             >
-                              <FiBookmark className={`w-4 h-4 ${conversation.isPinned ? 'text-blue-600 dark:text-blue-400' : ''}`} />
-                              {conversation.isPinned ? '取消置顶' : '置顶'}
+                              <FiBookmark className={`w-4 h-4 flex-shrink-0 ${conversation.isPinned ? 'text-blue-600 dark:text-blue-400' : ''}`} />
+                              <span className="truncate">{conversation.isPinned ? '取消置顶' : '置顶'}</span>
                             </button>
                             <button
                               onClick={(e) => handleDeleteConversation(conversation.id, e)}
-                              className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                              className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 whitespace-nowrap"
                             >
-                              <FiTrash2 className="w-4 h-4" />
-                              删除
+                              <FiTrash2 className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">删除</span>
                             </button>
                           </div>
                         )}

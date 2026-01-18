@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { Message } from '../types';
-import { callN8NWebhook } from '../utils/n8nWebhook';
+import { callModelAPI } from '../utils/apiService';
 import { generateTitle } from '../utils/titleGenerator';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
 
@@ -24,7 +24,7 @@ export default function MessageInput() {
   }, [input]);
 
   const handleSend = async () => {
-    if (!input.trim() || !currentConversation || !state.n8nWebhookUrl || isLoading) {
+    if (!input.trim() || !currentConversation || !state.apiConfig.apiKey || isLoading) {
       return;
     }
 
@@ -81,13 +81,8 @@ export default function MessageInput() {
       const messagesBeforeSend = currentConversation.messages.filter(m => m.role !== 'system');
       const isFirstRound = messagesBeforeSend.length === 0;
 
-      // Call n8n webhook
-      const responseContent = await callN8NWebhook(
-        state.n8nWebhookUrl,
-        currentConversation.id,
-        messages,
-        state.promptConfig.systemPrompt.trim() || undefined
-      );
+      // Call model API
+      const responseContent = await callModelAPI(state.apiConfig, messages);
 
       // Update assistant message with response
       dispatch({
@@ -157,10 +152,10 @@ export default function MessageInput() {
     );
   }
 
-  if (!state.n8nWebhookUrl) {
+  if (!state.apiConfig.apiKey) {
     return (
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400">
-        请先在提示词配置面板中设置n8n webhook URL
+        请先在右侧API配置面板中设置API Key
       </div>
     );
   }

@@ -7,19 +7,16 @@ import { getDefaultSystemPrompt, getDefaultSystemPromptSync } from '../utils/def
 export default function PromptPanel() {
   const { state, dispatch } = useApp();
   const [systemPrompt, setSystemPrompt] = useState(state.promptConfig.systemPrompt);
-  const [webhookUrl, setWebhookUrl] = useState(state.n8nWebhookUrl || '');
 
   useEffect(() => {
     setSystemPrompt(state.promptConfig.systemPrompt);
-    setWebhookUrl(state.n8nWebhookUrl || '');
-  }, [state.promptConfig, state.n8nWebhookUrl]);
+  }, [state.promptConfig]);
 
   const handleSave = () => {
     const config: PromptConfig = {
       systemPrompt,
     };
     dispatch({ type: 'SET_PROMPT_CONFIG', payload: config });
-    dispatch({ type: 'SET_N8N_WEBHOOK_URL', payload: webhookUrl });
   };
 
   const handleReset = async () => {
@@ -89,22 +86,6 @@ export default function PromptPanel() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            N8N Webhook URL
-          </label>
-          <input
-            type="text"
-            value={webhookUrl}
-            onChange={(e) => setWebhookUrl(e.target.value)}
-            placeholder="https://your-n8n-instance.com/webhook/..."
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            配置n8n工作流的webhook URL。网站会将对话数据发送到此URL，n8n处理后在响应中返回AI回复。
-          </p>
-        </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             系统提示词 (System Prompt)

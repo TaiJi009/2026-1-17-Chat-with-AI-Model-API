@@ -5,7 +5,7 @@ import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import { useApp } from '../contexts/AppContext';
 import { FiUser, FiMessageCircle, FiCopy, FiCheck, FiEdit2, FiSend, FiX } from 'react-icons/fi';
-import { callN8NWebhook } from '../utils/n8nWebhook';
+import { callModelAPI } from '../utils/apiService';
 import { Message } from '../types';
 
 export default function MessageList() {
@@ -66,7 +66,7 @@ export default function MessageList() {
   };
 
   const handleResend = async (messageId: string) => {
-    if (!currentConversation || !state.n8nWebhookUrl || isResending || !editContent.trim()) {
+    if (!currentConversation || !state.apiConfig.apiKey || isResending || !editContent.trim()) {
       return;
     }
 
@@ -131,13 +131,8 @@ export default function MessageList() {
       setEditingId(null);
       setEditContent('');
 
-      // 调用n8n webhook
-      const responseContent = await callN8NWebhook(
-        state.n8nWebhookUrl,
-        currentConversation.id,
-        messagesToSend,
-        state.promptConfig.systemPrompt.trim() || undefined
-      );
+      // 调用模型API
+      const responseContent = await callModelAPI(state.apiConfig, messagesToSend);
 
       // Update assistant message with response
       dispatch({

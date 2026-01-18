@@ -6,13 +6,17 @@ import { getDefaultSystemPromptSync } from '../utils/defaultSystemPrompt';
 const initialState: AppState = {
   conversations: [],
   currentConversationId: null,
-  n8nWebhookUrl: '', // 需要用户配置n8n webhook URL
+  apiConfig: {
+    provider: 'zhipu',
+    apiKey: '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB',
+  },
   promptConfig: {
     systemPrompt: getDefaultSystemPromptSync(),
   },
   theme: 'light',
   sidebarCollapsed: true, // 移动端默认折叠
   promptPanelCollapsed: true,
+  apiConfigPanelCollapsed: true,
   editingMessageId: null,
 };
 
@@ -127,10 +131,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
       };
 
-    case 'SET_N8N_WEBHOOK_URL':
+    case 'SET_API_CONFIG':
       return {
         ...state,
-        n8nWebhookUrl: action.payload,
+        apiConfig: action.payload,
       };
 
     case 'SET_PROMPT_CONFIG':
@@ -155,6 +159,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         promptPanelCollapsed: !state.promptPanelCollapsed,
+      };
+
+    case 'TOGGLE_API_CONFIG_PANEL':
+      return {
+        ...state,
+        apiConfigPanelCollapsed: !state.apiConfigPanelCollapsed,
       };
 
     case 'LOAD_STATE':
@@ -191,11 +201,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saveState({
       conversations: state.conversations,
       currentConversationId: state.currentConversationId,
-      n8nWebhookUrl: state.n8nWebhookUrl,
+      apiConfig: state.apiConfig,
       promptConfig: state.promptConfig,
       theme: state.theme,
       sidebarCollapsed: state.sidebarCollapsed,
       promptPanelCollapsed: state.promptPanelCollapsed,
+      apiConfigPanelCollapsed: state.apiConfigPanelCollapsed,
       editingMessageId: state.editingMessageId,
     });
   }, [state]);

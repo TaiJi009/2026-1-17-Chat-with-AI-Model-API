@@ -19,14 +19,20 @@ export interface PromptConfig {
   systemPrompt: string;
 }
 
+export interface ApiConfig {
+  provider: 'zhipu' | 'openai' | 'claude' | 'tongyi' | 'wenxin' | 'spark' | 'doubao';
+  apiKey: string;
+}
+
 export interface AppState {
   conversations: Conversation[];
   currentConversationId: string | null;
-  n8nWebhookUrl: string; // n8n webhook URL
+  apiConfig: ApiConfig;
   promptConfig: PromptConfig;
   theme: 'light' | 'dark';
   sidebarCollapsed: boolean;
   promptPanelCollapsed: boolean;
+  apiConfigPanelCollapsed: boolean;
   editingMessageId: string | null; // 正在编辑的消息ID
 }
 
@@ -41,9 +47,10 @@ export type AppAction =
   | { type: 'DELETE_MESSAGES_AFTER'; payload: { conversationId: string; messageId: string } }
   | { type: 'CLEAR_CONVERSATION'; payload: string }
   | { type: 'TOGGLE_PIN_CONVERSATION'; payload: string }
-  | { type: 'SET_N8N_WEBHOOK_URL'; payload: string }
+  | { type: 'SET_API_CONFIG'; payload: ApiConfig }
   | { type: 'SET_PROMPT_CONFIG'; payload: PromptConfig }
   | { type: 'SET_THEME'; payload: 'light' | 'dark' }
   | { type: 'TOGGLE_SIDEBAR' }
   | { type: 'TOGGLE_PROMPT_PANEL' }
+  | { type: 'TOGGLE_API_CONFIG_PANEL' }
   | { type: 'LOAD_STATE'; payload: Partial<AppState> };
