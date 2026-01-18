@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { MouseEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { Conversation } from '../types';
-import { FiPlus, FiX, FiMessageSquare, FiMoreVertical, FiEdit2, FiPin, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiX, FiMessageSquare, FiMoreVertical, FiEdit2, FiBookmark, FiTrash2 } from 'react-icons/fi';
 
 export default function ConversationList() {
   const { state, dispatch } = useApp();
@@ -90,75 +90,6 @@ export default function ConversationList() {
     return date.toLocaleDateString('zh-CN');
   };
 
-  if (state.sidebarCollapsed) {
-    return (
-      <div className="hidden sm:flex w-16 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex-col items-center p-2">
-        <button
-          onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
-          className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded"
-          title="展开侧边栏"
-        >
-          <FiMessageSquare className="w-5 h-5" />
-        </button>
-        <button
-          onClick={handleNewConversation}
-          className="mt-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded"
-          title="新建会话"
-        >
-          <FiPlus className="w-5 h-5" />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`absolute sm:relative z-20 sm:z-auto w-full sm:w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full ${state.sidebarCollapsed ? 'hidden sm:flex' : ''}`}>
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">会话</h2>
-          <button
-            onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
-            className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded"
-          >
-            <FiX className="w-4 h-4" />
-          </button>
-        </div>
-        <button
-          onClick={handleNewConversation}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
-        >
-          <FiPlus className="w-4 h-4" />
-          新建会话
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        {state.conversations.length === 0 ? (
-          <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
-            还没有会话，点击上方按钮创建
-          </div>
-        ) : (
-          <div className="p-2">
-            {/* 置顶会话 */}
-            {state.conversations
-              .filter(c => c.isPinned)
-              .sort((a, b) => b.updatedAt - a.updatedAt)
-              .map((conversation) => (
-                renderConversationItem(conversation)
-              ))}
-            {/* 非置顶会话 */}
-            {state.conversations
-              .filter(c => !c.isPinned)
-              .sort((a, b) => b.updatedAt - a.updatedAt)
-              .map((conversation) => (
-                renderConversationItem(conversation)
-              ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
   function renderConversationItem(conversation: Conversation) {
     return (
               <div
@@ -191,7 +122,7 @@ export default function ConversationList() {
                         <div className="flex items-center gap-1">
                           <div className="font-medium text-sm truncate">{conversation.name}</div>
                           {conversation.isPinned && (
-                            <FiPin className="w-3 h-3 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                            <FiBookmark className="w-3 h-3 flex-shrink-0 text-blue-600 dark:text-blue-400" />
                           )}
                         </div>
                         <div className="text-xs mt-1 opacity-70">
@@ -226,7 +157,7 @@ export default function ConversationList() {
                               onClick={(e) => handleTogglePin(conversation.id, e)}
                               className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                             >
-                              <FiPin className={`w-4 h-4 ${conversation.isPinned ? 'text-blue-600 dark:text-blue-400' : ''}`} />
+                              <FiBookmark className={`w-4 h-4 ${conversation.isPinned ? 'text-blue-600 dark:text-blue-400' : ''}`} />
                               {conversation.isPinned ? '取消置顶' : '置顶'}
                             </button>
                             <button
@@ -244,6 +175,27 @@ export default function ConversationList() {
                 )}
               </div>
             );
+  }
+
+  if (state.sidebarCollapsed) {
+    return (
+      <div className="hidden sm:flex w-16 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex-col items-center p-2">
+        <button
+          onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+          className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded"
+          title="展开侧边栏"
+        >
+          <FiMessageSquare className="w-5 h-5" />
+        </button>
+        <button
+          onClick={handleNewConversation}
+          className="mt-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded"
+          title="新建会话"
+        >
+          <FiPlus className="w-5 h-5" />
+        </button>
+      </div>
+    );
   }
 
   return (
