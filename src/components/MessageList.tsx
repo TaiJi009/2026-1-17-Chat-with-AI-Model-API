@@ -199,6 +199,9 @@ export default function MessageList() {
     };
 
     container.addEventListener('scroll', handleScroll);
+    // 初始化时检查是否在底部
+    handleScroll();
+    
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -208,6 +211,34 @@ export default function MessageList() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, shouldAutoScroll]);
+
+  // 监听容器高度变化（流式内容逐字更新时会改变高度），如果用户在底部则滚动
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const streamingMessage = messages.find(m => m.role === 'assistant' && m.isStreaming);
+    if (!streamingMessage) return;
+
+    // 使用 MutationObserver 监听 DOM 变化（流式内容逐字更新时）
+    const observer = new MutationObserver(() => {
+      // 检查是否应该自动滚动（用户在底部）
+      // 注意：这里不直接使用 shouldAutoScroll，而是在每次 DOM 变化时重新检查
+      // 因为 shouldAutoScroll 可能在滚动监听器中更新，可能存在延迟
+      const nearBottom = checkIfNearBottom();
+      if (nearBottom) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      }
+    });
+
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => observer.disconnect();
+  }, [messages.find(m => m.role === 'assistant' && m.isStreaming)?.id]);
 
   const formatTime = (timestamp: number) => {
     return new Date(timestamp).toLocaleTimeString('zh-CN', {
