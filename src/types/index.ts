@@ -12,6 +12,7 @@ export interface Conversation {
   createdAt: number;
   updatedAt: number;
   isManuallyRenamed?: boolean; // 标记是否手动重命名过
+  isPinned?: boolean; // 标记是否置顶
 }
 
 export interface PromptConfig {
@@ -39,6 +40,7 @@ export type AppAction =
   | { type: 'UPDATE_CONVERSATION_TITLE'; payload: { conversationId: string; title: string } }
   | { type: 'DELETE_MESSAGES_AFTER'; payload: { conversationId: string; messageId: string } }
   | { type: 'CLEAR_CONVERSATION'; payload: string }
+  | { type: 'TOGGLE_PIN_CONVERSATION'; payload: string }
   | { type: 'SET_N8N_WEBHOOK_URL'; payload: string }
   | { type: 'SET_PROMPT_CONFIG'; payload: PromptConfig }
   | { type: 'SET_THEME'; payload: 'light' | 'dark' }

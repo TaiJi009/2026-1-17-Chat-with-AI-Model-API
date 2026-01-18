@@ -43,6 +43,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
       };
 
+    case 'TOGGLE_PIN_CONVERSATION':
+      return {
+        ...state,
+        conversations: state.conversations.map(c =>
+          c.id === action.payload ? { ...c, isPinned: !c.isPinned } : c
+        ),
+      };
+
     case 'SET_CURRENT_CONVERSATION':
       return {
         ...state,
