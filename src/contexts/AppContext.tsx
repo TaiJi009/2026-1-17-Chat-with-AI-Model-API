@@ -19,6 +19,7 @@ const initialState: AppState = {
   sidebarCollapsed: true, // 移动端默认折叠
   promptPanelCollapsed: true,
   apiConfigPanelCollapsed: true,
+  settingsPanelCollapsed: true, // 设置面板默认折叠
   editingMessageId: null,
 };
 
@@ -188,6 +189,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
         apiConfigPanelCollapsed: !state.apiConfigPanelCollapsed,
       };
 
+    case 'TOGGLE_SETTINGS_PANEL':
+      return {
+        ...state,
+        settingsPanelCollapsed: !state.settingsPanelCollapsed,
+      };
+
     case 'LOAD_STATE':
       return {
         ...state,
@@ -228,6 +235,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       sidebarCollapsed: state.sidebarCollapsed,
       promptPanelCollapsed: state.promptPanelCollapsed,
       apiConfigPanelCollapsed: state.apiConfigPanelCollapsed,
+      settingsPanelCollapsed: state.settingsPanelCollapsed,
       editingMessageId: state.editingMessageId,
     });
   }, [state]);

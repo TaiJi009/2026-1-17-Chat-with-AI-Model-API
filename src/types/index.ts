@@ -36,6 +36,7 @@ export interface AppState {
   sidebarCollapsed: boolean;
   promptPanelCollapsed: boolean;
   apiConfigPanelCollapsed: boolean;
+  settingsPanelCollapsed: boolean; // 设置面板的展开/收起状态
   editingMessageId: string | null; // 正在编辑的消息ID
 }
 
@@ -57,4 +58,5 @@ export type AppAction =
   | { type: 'TOGGLE_SIDEBAR' }
   | { type: 'TOGGLE_PROMPT_PANEL' }
   | { type: 'TOGGLE_API_CONFIG_PANEL' }
+  | { type: 'TOGGLE_SETTINGS_PANEL' }
   | { type: 'LOAD_STATE'; payload: Partial<AppState> };

@@ -1,10 +1,9 @@
 import { AppProvider, useApp } from './contexts/AppContext';
 import ConversationList from './components/ConversationList';
 import ChatArea from './components/ChatArea';
-import PromptPanel from './components/PromptPanel';
-import ApiConfigPanel from './components/ApiConfigPanel';
+import SettingsPanel from './components/SettingsPanel';
 import ThemeToggle from './components/ThemeToggle';
-import { FiMenu, FiSettings, FiZap } from 'react-icons/fi';
+import { FiMenu, FiZap } from 'react-icons/fi';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -35,14 +34,6 @@ function AppContent() {
 
         {/* Right: Controls */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Mobile Settings Button */}
-          <button
-            onClick={() => dispatch({ type: 'TOGGLE_PROMPT_PANEL' })}
-            className="sm:hidden p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
-            title="打开提示词配置"
-          >
-            <FiSettings className="w-5 h-5" />
-          </button>
           {/* Theme Toggle */}
           <div className="flex-shrink-0">
             <ThemeToggle />
@@ -59,18 +50,6 @@ function AppContent() {
             onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
           />
         )}
-        {!state.promptPanelCollapsed && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden"
-            onClick={() => dispatch({ type: 'TOGGLE_PROMPT_PANEL' })}
-          />
-        )}
-        {!state.apiConfigPanelCollapsed && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden"
-            onClick={() => dispatch({ type: 'TOGGLE_API_CONFIG_PANEL' })}
-          />
-        )}
 
         {/* Left Sidebar - Conversation List */}
         <ConversationList />
@@ -78,11 +57,8 @@ function AppContent() {
         {/* Center - Chat Area */}
         <ChatArea />
 
-        {/* Right Sidebar - Prompt Panel */}
-        <PromptPanel />
-
-        {/* Right Sidebar - API Config Panel */}
-        <ApiConfigPanel />
+        {/* Settings Panel - Bottom Left/Right */}
+        <SettingsPanel />
       </div>
     </div>
   );

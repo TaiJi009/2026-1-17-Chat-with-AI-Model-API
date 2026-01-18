@@ -4,7 +4,7 @@ import { useApp } from '../contexts/AppContext';
 import { Message } from '../types';
 import { callModelAPI } from '../utils/apiService';
 import { generateTitle } from '../utils/titleGenerator';
-import { FiSend, FiTrash2 } from 'react-icons/fi';
+import { FiSend, FiTrash2, FiMoreVertical } from 'react-icons/fi';
 
 export default function MessageInput() {
   const { state, dispatch } = useApp();
@@ -194,14 +194,22 @@ export default function MessageInput() {
   if (!currentApiKey) {
     return (
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400">
-        请先在右侧API配置面板中设置API Key
+        请先在设置中配置API Key
       </div>
     );
   }
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 p-2 sm:p-4">
+    <div className="border-t border-gray-200 dark:border-gray-700 p-2 sm:p-4 relative">
       <div className="flex items-end gap-2">
+        {/* 设置按钮 - 左下角 */}
+        <button
+          onClick={() => dispatch({ type: 'TOGGLE_SETTINGS_PANEL' })}
+          className="p-2 sm:p-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex-shrink-0"
+          title="设置"
+        >
+          <FiMoreVertical className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
