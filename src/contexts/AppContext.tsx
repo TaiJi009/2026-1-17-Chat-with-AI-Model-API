@@ -207,6 +207,30 @@ function appReducer(state: AppState, action: AppAction): AppState {
           })),
         }));
       }
+      
+      // 确保API配置存在且包含默认的智谱API Key
+      const defaultZhipuKey = '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB';
+      if (!loadedState.apiConfig) {
+        loadedState.apiConfig = {
+          provider: 'zhipu',
+          apiKeys: { zhipu: defaultZhipuKey },
+        };
+      } else {
+        // 确保provider存在，默认为智谱
+        if (!loadedState.apiConfig.provider) {
+          loadedState.apiConfig.provider = 'zhipu';
+        }
+        // 确保apiKeys存在
+        if (!loadedState.apiConfig.apiKeys) {
+          loadedState.apiConfig.apiKeys = { zhipu: defaultZhipuKey };
+        } else {
+          // 如果智谱的API Key不存在，添加默认值
+          if (!loadedState.apiConfig.apiKeys.zhipu) {
+            loadedState.apiConfig.apiKeys.zhipu = defaultZhipuKey;
+          }
+        }
+      }
+      
       return {
         ...state,
         ...loadedState,
