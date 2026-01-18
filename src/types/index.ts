@@ -46,6 +46,7 @@ export type AppAction =
   | { type: 'SET_CURRENT_CONVERSATION'; payload: string | null }
   | { type: 'ADD_MESSAGE'; payload: { conversationId: string; message: Message } }
   | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; messageId: string; content: string } }
+  | { type: 'SET_MESSAGE_STREAMING'; payload: { conversationId: string; messageId: string; isStreaming: boolean } }
   | { type: 'UPDATE_CONVERSATION_TITLE'; payload: { conversationId: string; title: string } }
   | { type: 'DELETE_MESSAGES_AFTER'; payload: { conversationId: string; messageId: string } }
   | { type: 'CLEAR_CONVERSATION'; payload: string }

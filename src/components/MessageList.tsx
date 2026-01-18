@@ -10,6 +10,104 @@ import { parseAIResponse } from '../utils/responseParser';
 import ThinkingDisplay from './ThinkingDisplay';
 import { Message } from '../types';
 
+// 流式Markdown显示组件
+function StreamingMarkdown({ 
+  content, 
+  isStreaming, 
+  theme,
+  components 
+}: { 
+  content: string; 
+  isStreaming?: boolean;
+  theme: 'light' | 'dark';
+  components: any;
+}) {
+  const [displayedContent, setDisplayedContent] = useState('');
+  const contentIndexRef = useRef(0);
+  const timerRef = useRef<number | null>(null);
+  const prevContentRef = useRef('');
+
+  useEffect(() => {
+    // 如果内容发生变化
+    if (content !== prevContentRef.current) {
+      const prevLength = prevContentRef.current.length;
+      const wasEmpty = prevContentRef.current === '';
+      prevContentRef.current = content;
+      
+      if (isStreaming && content) {
+        // 流式显示
+        if (wasEmpty || content.length < prevLength) {
+          // 内容首次设置或被替换，从头开始
+          contentIndexRef.current = 0;
+          setDisplayedContent('');
+        }
+        // 如果内容增加了，继续从当前位置显示（contentIndexRef 保持不变）
+      } else if (!isStreaming) {
+        // 非流式：立即显示全部内容
+        setDisplayedContent(content);
+        contentIndexRef.current = content.length;
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        return;
+      }
+    }
+
+    // 流式显示逻辑：确保在流式状态且内容存在时开始显示
+    if (isStreaming && content) {
+      // 如果当前显示的内容长度小于实际内容长度，启动定时器
+      if (contentIndexRef.current < content.length) {
+        // 清除旧的定时器（如果有）
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+
+        timerRef.current = window.setInterval(() => {
+          if (contentIndexRef.current < content.length) {
+            contentIndexRef.current += 1;
+            setDisplayedContent(content.substring(0, contentIndexRef.current));
+          } else {
+            // 显示完成，清除定时器
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+          }
+        }, 30); // 每30ms显示一个字符
+      }
+    } else {
+      // 非流式状态，清除定时器
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [content, isStreaming]);
+
+  // 如果不在流式状态或内容已全部显示，直接返回完整内容
+  const contentToRender = isStreaming ? displayedContent : content;
+  const showCursor = isStreaming && displayedContent.length < content.length;
+
+  return (
+    <>
+      <ReactMarkdown components={components}>
+        {contentToRender}
+      </ReactMarkdown>
+      {showCursor && (
+        <span className="inline-block ml-1 text-gray-400 dark:text-gray-500 animate-pulse">·</span>
+      )}
+    </>
+  );
+}
+
 export default function MessageList() {
   const { state, dispatch } = useApp();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -27,6 +125,17 @@ export default function MessageList() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // 流式显示时也自动滚动
+  useEffect(() => {
+    const streamingMessage = messages.find(m => m.role === 'assistant' && m.isStreaming);
+    if (streamingMessage) {
+      const scrollInterval = setInterval(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+      return () => clearInterval(scrollInterval);
+    }
   }, [messages]);
 
   const formatTime = (timestamp: number) => {
@@ -147,6 +256,16 @@ export default function MessageList() {
       setEditingId(null);
       setEditContent('');
 
+      // 标记消息为流式状态
+      dispatch({
+        type: 'SET_MESSAGE_STREAMING',
+        payload: {
+          conversationId: currentConversation.id,
+          messageId: assistantMessageId,
+          isStreaming: true,
+        },
+      });
+
       // 调用模型API
       const responseContent = await callModelAPI(state.apiConfig, messagesToSend);
 
@@ -160,6 +279,18 @@ export default function MessageList() {
         },
       });
       assistantMessage.content = responseContent;
+
+      // 流式显示完成后，关闭流式状态
+      setTimeout(() => {
+        dispatch({
+          type: 'SET_MESSAGE_STREAMING',
+          payload: {
+            conversationId: currentConversation.id,
+            messageId: assistantMessageId,
+            isStreaming: false,
+          },
+        });
+      }, Math.max(responseContent.length * 30, 1000));
     } catch (error) {
       console.error('重新发送失败:', error);
       const errorMessage = error instanceof Error ? error.message : '重新发送失败';
@@ -288,30 +419,58 @@ export default function MessageList() {
                   />
                 ) : (
                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <ReactMarkdown
-                      components={{
-                        code({ className, children, ...props }) {
-                          const match = /language-(\w+)/.exec(className || '');
-                          const inline = !match;
-                          return !inline && match ? (
-                            <SyntaxHighlighter
-                              style={state.theme === 'dark' ? vscDarkPlus : vs}
-                              language={match[1]}
-                              PreTag="div"
-                              {...(props as SyntaxHighlighterProps)}
-                            >
-                              {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                      }}
-                    >
-                      {message.content}
-                    </ReactMarkdown>
+                    {message.role === 'assistant' && message.isStreaming ? (
+                      <StreamingMarkdown
+                        content={message.content}
+                        isStreaming={message.isStreaming}
+                        theme={state.theme}
+                        components={{
+                          code({ className, children, ...props }) {
+                            const match = /language-(\w+)/.exec(className || '');
+                            const inline = !match;
+                            return !inline && match ? (
+                              <SyntaxHighlighter
+                                style={state.theme === 'dark' ? vscDarkPlus : vs}
+                                language={match[1]}
+                                PreTag="div"
+                                {...(props as SyntaxHighlighterProps)}
+                              >
+                                {String(children).replace(/\n$/, '')}
+                              </SyntaxHighlighter>
+                            ) : (
+                              <code className={className} {...props}>
+                                {children}
+                              </code>
+                            );
+                          },
+                        }}
+                      />
+                    ) : (
+                      <ReactMarkdown
+                        components={{
+                          code({ className, children, ...props }) {
+                            const match = /language-(\w+)/.exec(className || '');
+                            const inline = !match;
+                            return !inline && match ? (
+                              <SyntaxHighlighter
+                                style={state.theme === 'dark' ? vscDarkPlus : vs}
+                                language={match[1]}
+                                PreTag="div"
+                                {...(props as SyntaxHighlighterProps)}
+                              >
+                                {String(children).replace(/\n$/, '')}
+                              </SyntaxHighlighter>
+                            ) : (
+                              <code className={className} {...props}>
+                                {children}
+                              </code>
+                            );
+                          },
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    )}
                   </div>
                 )}
                 <div className="flex items-center justify-between mt-2">

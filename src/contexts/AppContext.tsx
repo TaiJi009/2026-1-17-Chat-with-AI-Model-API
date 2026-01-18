@@ -95,6 +95,24 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
       };
 
+    case 'SET_MESSAGE_STREAMING':
+      return {
+        ...state,
+        conversations: state.conversations.map(c =>
+          c.id === action.payload.conversationId
+            ? {
+                ...c,
+                messages: c.messages.map(m =>
+                  m.id === action.payload.messageId
+                    ? { ...m, isStreaming: action.payload.isStreaming }
+                    : m
+                ),
+                updatedAt: Date.now(),
+              }
+            : c
+        ),
+      };
+
     case 'UPDATE_CONVERSATION_TITLE':
       return {
         ...state,
