@@ -159,7 +159,7 @@ export default function SettingsPanel() {
       />
       
       {/* 设置面板 */}
-      <div className="fixed sm:absolute left-0 sm:left-auto right-0 bottom-0 sm:bottom-0 w-full sm:w-96 h-[80vh] sm:h-full bg-gray-50 dark:bg-gray-900 border-t sm:border-t-0 sm:border-l border-gray-200 dark:border-gray-700 flex flex-col shadow-lg z-50">
+      <div className="fixed sm:relative left-0 bottom-0 sm:bottom-auto w-full sm:w-96 h-[80vh] sm:h-full bg-gray-50 dark:bg-gray-900 border-t sm:border-l border-gray-200 dark:border-gray-700 flex flex-col shadow-lg sm:shadow-none z-50 sm:z-auto flex-shrink-0">
         {/* 头部 */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">

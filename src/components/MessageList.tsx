@@ -24,8 +24,25 @@ function StreamingMarkdown({
   const contentIndexRef = useRef(0);
   const timerRef = useRef<number | null>(null);
   const prevContentRef = useRef('');
+  const isInitializedRef = useRef(false);
 
   useEffect(() => {
+    // 初始化检查：如果内容已存在且不在流式状态，直接显示全部内容
+    if (!isInitializedRef.current) {
+      isInitializedRef.current = true;
+      if (content && !isStreaming) {
+        // 已保存的消息，直接显示全部内容
+        setDisplayedContent(content);
+        contentIndexRef.current = content.length;
+        prevContentRef.current = content;
+        return;
+      } else if (!content && !isStreaming) {
+        // 空内容且不在流式状态，直接返回
+        prevContentRef.current = '';
+        return;
+      }
+    }
+
     // 如果内容发生变化
     if (content !== prevContentRef.current) {
       const prevLength = prevContentRef.current.length;
@@ -33,9 +50,13 @@ function StreamingMarkdown({
       prevContentRef.current = content;
       
       if (isStreaming && content) {
-        // 流式显示
-        if (wasEmpty || content.length < prevLength) {
-          // 内容首次设置或被替换，从头开始
+        // 流式显示：只有内容从空变为有内容时才从头开始
+        if (wasEmpty && content.length > 0) {
+          // 内容首次设置，从头开始流式显示
+          contentIndexRef.current = 0;
+          setDisplayedContent('');
+        } else if (content.length < prevLength) {
+          // 内容被替换，重置
           contentIndexRef.current = 0;
           setDisplayedContent('');
         }
@@ -52,8 +73,8 @@ function StreamingMarkdown({
       }
     }
 
-    // 流式显示逻辑：确保在流式状态且内容存在时开始显示
-    if (isStreaming && content) {
+    // 流式显示逻辑：只有当 isStreaming === true 且内容从空变为有内容时才启动
+    if (isStreaming && content && content.length > 0) {
       // 如果当前显示的内容长度小于实际内容长度，启动定时器
       if (contentIndexRef.current < content.length) {
         // 清除旧的定时器（如果有）

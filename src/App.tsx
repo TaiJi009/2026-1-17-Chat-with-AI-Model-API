@@ -26,7 +26,7 @@ function AppContent() {
           {/* Logo Icon */}
           <div className="flex items-center gap-2 sm:gap-3">
             <FiZap className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-            <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap hidden xs:inline">
+            <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
               今天你创作了吗？
             </span>
           </div>
