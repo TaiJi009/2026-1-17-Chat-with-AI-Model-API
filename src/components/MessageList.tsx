@@ -14,24 +14,39 @@ import { Message } from '../types';
 function StreamingMarkdown({ 
   content, 
   isStreaming, 
-  components 
+  components,
+  messageId
 }: { 
   content: string; 
   isStreaming?: boolean;
   components: any;
+  messageId: string;
 }) {
   const [displayedContent, setDisplayedContent] = useState('');
   const contentIndexRef = useRef(0);
   const timerRef = useRef<number | null>(null);
   const prevContentRef = useRef('');
-  const isInitializedRef = useRef(false);
+  const initializedMessageIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // 当消息ID变化时，重置初始化状态（切换会话时）
+    if (initializedMessageIdRef.current !== messageId) {
+      initializedMessageIdRef.current = messageId;
+      // 重置所有状态
+      setDisplayedContent('');
+      contentIndexRef.current = 0;
+      prevContentRef.current = '';
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+
     // 初始化检查：如果内容已存在且不在流式状态，直接显示全部内容
-    if (!isInitializedRef.current) {
-      isInitializedRef.current = true;
+    // 使用 prevContentRef 来判断是否是首次加载（prevContentRef 为空表示首次）
+    if (initializedMessageIdRef.current === messageId && prevContentRef.current === '') {
       if (content && !isStreaming) {
-        // 已保存的消息，直接显示全部内容
+        // 已保存的消息，直接显示全部内容（仅在首次初始化时）
         setDisplayedContent(content);
         contentIndexRef.current = content.length;
         prevContentRef.current = content;
@@ -109,7 +124,7 @@ function StreamingMarkdown({
         timerRef.current = null;
       }
     };
-  }, [content, isStreaming]);
+  }, [content, isStreaming, messageId]);
 
   // 如果不在流式状态或内容已全部显示，直接返回完整内容
   const contentToRender = isStreaming ? displayedContent : content;
@@ -450,6 +465,7 @@ export default function MessageList() {
                       <StreamingMarkdown
                         content={message.content}
                         isStreaming={message.isStreaming}
+                        messageId={message.id}
                         components={{
                           code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: any }) {
                             const match = /language-(\w+)/.exec(className || '');

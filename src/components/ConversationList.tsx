@@ -248,11 +248,10 @@ export default function ConversationList() {
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
         <button
           onClick={() => dispatch({ type: 'TOGGLE_SETTINGS_PANEL' })}
-          className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg flex items-center justify-center gap-2 transition-colors"
+          className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg transition-colors"
           title="设置"
         >
           <FiMoreVertical className="w-5 h-5" />
-          <span className="text-sm">设置</span>
         </button>
       </div>
     </div>

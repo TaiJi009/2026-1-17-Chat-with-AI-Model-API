@@ -196,9 +196,20 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
 
     case 'LOAD_STATE':
+      // 加载状态时，确保所有消息的 isStreaming 都为 false（防止已保存消息重新流式显示）
+      const loadedState = action.payload;
+      if (loadedState.conversations) {
+        loadedState.conversations = loadedState.conversations.map(conv => ({
+          ...conv,
+          messages: conv.messages.map(msg => ({
+            ...msg,
+            isStreaming: false,
+          })),
+        }));
+      }
       return {
         ...state,
-        ...action.payload,
+        ...loadedState,
       };
 
     default:
