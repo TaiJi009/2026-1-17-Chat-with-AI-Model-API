@@ -134,22 +134,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
 
     case 'SET_API_CONFIG':
-      // 如果payload包含provider和apiKey，更新对应模型的API key
-      // 如果只包含provider，只切换当前模型
-      // 如果包含完整的apiConfig，直接替换
-      if ('apiKeys' in action.payload) {
-        return {
-          ...state,
-          apiConfig: action.payload,
-        };
-      }
-      // 兼容旧格式，向后兼容
+      // 直接使用payload，因为ApiConfig总是包含apiKeys
       return {
         ...state,
-        apiConfig: {
-          ...state.apiConfig,
-          ...action.payload,
-        },
+        apiConfig: action.payload,
       };
 
     case 'SET_PROMPT_CONFIG':

@@ -1,11 +1,6 @@
-import { Message } from '../types';
+import { Message, ApiConfig } from '../types';
 
 export type ApiProvider = 'zhipu' | 'openai' | 'claude' | 'tongyi' | 'wenxin' | 'spark' | 'doubao';
-
-export interface ApiConfig {
-  provider: ApiProvider;
-  apiKey: string;
-}
 
 export interface ApiResponse {
   content: string;
