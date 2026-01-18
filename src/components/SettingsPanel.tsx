@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { PromptConfig, ApiConfig } from '../types';
 import { getProviderDisplayName, ApiProvider } from '../utils/apiService';
@@ -38,6 +38,53 @@ export default function SettingsPanel() {
   useEffect(() => {
     setSystemPrompt(state.promptConfig.systemPrompt);
   }, [state.promptConfig]);
+
+  // 用于跟踪上次检查的文件内容，避免重复更新
+  const lastFileContentRef = useRef<string>('');
+
+  // 自动同步 系统默认提示词工程.md 文件内容
+  useEffect(() => {
+    let syncInterval: number | null = null;
+
+    const checkAndSyncPrompt = async () => {
+      try {
+        const defaultPrompt = await getDefaultSystemPrompt();
+        const currentContent = defaultPrompt.trim();
+        
+        // 如果内容有变化，且与当前配置不同，则自动同步
+        if (currentContent && 
+            currentContent !== lastFileContentRef.current && 
+            currentContent !== state.promptConfig.systemPrompt.trim()) {
+          lastFileContentRef.current = currentContent;
+          // 自动更新系统提示词配置
+          const config: PromptConfig = {
+            systemPrompt: defaultPrompt,
+          };
+          dispatch({ type: 'SET_PROMPT_CONFIG', payload: config });
+          // 更新本地状态
+          setSystemPrompt(defaultPrompt);
+          console.log('✓ 已自动同步 系统默认提示词工程.md 的最新内容');
+        } else if (lastFileContentRef.current === '') {
+          // 初始化时记录当前内容
+          lastFileContentRef.current = currentContent;
+        }
+      } catch (error) {
+        // 静默失败，不影响正常使用
+      }
+    };
+
+    // 立即检查一次
+    checkAndSyncPrompt();
+
+    // 每 2 秒检查一次文件是否有更新
+    syncInterval = window.setInterval(checkAndSyncPrompt, 2000);
+
+    return () => {
+      if (syncInterval !== null) {
+        clearInterval(syncInterval);
+      }
+    };
+  }, [state.promptConfig.systemPrompt, dispatch]);
 
   // 获取当前模型的API Key
   const getCurrentApiKey = (targetProvider: ApiProvider): string => {
