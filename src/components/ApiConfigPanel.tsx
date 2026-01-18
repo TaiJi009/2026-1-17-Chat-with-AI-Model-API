@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { ApiConfig } from '../types';
 import { getProviderDisplayName, ApiProvider } from '../utils/apiService';
-import { FiX, FiChevronLeft, FiSave, FiKey, FiLock, FiCreditCard } from 'react-icons/fi';
+import { FiX, FiChevronLeft, FiSave, FiKey, FiLock, FiCreditCard, FiRefreshCw } from 'react-icons/fi';
 
 // 默认API Key（仅在用户未保存时使用）
 const DEFAULT_API_KEYS: Partial<Record<ApiProvider, string>> = {
@@ -83,6 +83,26 @@ export default function ApiConfigPanel() {
     }
   };
 
+  const handleReset = () => {
+    if (confirm(`确定要重置 ${getProviderDisplayName(provider)} 的API Key吗？`)) {
+      // 重置为默认值（如果有），否则清空
+      const defaultKey = DEFAULT_API_KEYS[provider] || '';
+      setApiKey(defaultKey);
+      
+      // 如果用户已保存过该模型的API Key，需要从apiKeys中删除
+      if (state.apiConfig.apiKeys?.[provider]) {
+        const updatedApiKeys = { ...state.apiConfig.apiKeys };
+        delete updatedApiKeys[provider];
+        
+        const config: ApiConfig = {
+          provider: state.apiConfig.provider,
+          apiKeys: updatedApiKeys,
+        };
+        dispatch({ type: 'SET_API_CONFIG', payload: config });
+      }
+    }
+  };
+
   const providers: ApiProvider[] = ['zhipu', 'openai', 'claude', 'tongyi', 'wenxin', 'spark', 'doubao'];
 
   if (state.apiConfigPanelCollapsed) {
@@ -147,9 +167,16 @@ export default function ApiConfigPanel() {
             >
               <FiCreditCard className="w-4 h-4" />
             </button>
+            <button
+              onClick={handleReset}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
+              title="重置API Key"
+            >
+              <FiRefreshCw className="w-4 h-4" />
+            </button>
           </div>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            选择要使用的大模型提供商，点击充值图标前往充值页面
+            选择要使用的大模型提供商，点击充值图标前往充值页面，点击重置图标恢复默认设置
           </p>
         </div>
 
