@@ -1,5 +1,4 @@
 import { AppProvider, useApp } from './contexts/AppContext';
-import ApiConfig from './components/ApiConfig';
 import ConversationList from './components/ConversationList';
 import ChatArea from './components/ChatArea';
 import PromptPanel from './components/PromptPanel';
@@ -11,10 +10,10 @@ function AppContent() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-950">
-      {/* Top API Config Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+      {/* Top Bar - Mobile Menu & Theme Toggle */}
+      <div className="flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-2 sm:px-4 py-2">
         {/* Mobile Menu Buttons */}
-        <div className="flex sm:hidden items-center gap-2 p-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex sm:hidden items-center gap-2">
           <button
             onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
             className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
@@ -30,13 +29,9 @@ function AppContent() {
             <FiSettings className="w-5 h-5" />
           </button>
         </div>
-        <div className="flex-1 min-w-0">
-          <ApiConfig />
-        </div>
-        <div className="hidden sm:block p-2 flex-shrink-0">
-          <ThemeToggle />
-        </div>
-        <div className="sm:hidden p-2 flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex-1 sm:hidden"></div>
+        {/* Theme Toggle */}
+        <div className="flex-shrink-0">
           <ThemeToggle />
         </div>
       </div>
