@@ -21,14 +21,12 @@ export interface N8NWebhookResponse {
  * @param conversationId 会话ID
  * @param messages 消息列表
  * @param systemPrompt 系统提示词
- * @param onChunk 流式输出回调（如果n8n支持流式输出）
  */
 export const callN8NWebhook = async (
   webhookUrl: string,
   conversationId: string,
   messages: Message[],
-  systemPrompt?: string,
-  onChunk?: (chunk: string) => void
+  systemPrompt?: string
 ): Promise<string> => {
   if (!webhookUrl) {
     throw new Error('N8N webhook URL is required');
