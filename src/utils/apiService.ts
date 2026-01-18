@@ -212,7 +212,7 @@ async function callWenxinAPI(apiKey: string, messages: Message[]): Promise<strin
 /**
  * 调用星火大模型API (讯飞)
  */
-async function callSparkAPI(apiKey: string, messages: Message[]): Promise<string> {
+async function callSparkAPI(_apiKey: string, _messages: Message[]): Promise<string> {
   // 讯飞星火API需要特殊的认证方式，这里简化处理
   // 实际使用时需要根据讯飞API文档进行认证
   throw new Error('星火大模型API暂未实现，请使用其他模型');
