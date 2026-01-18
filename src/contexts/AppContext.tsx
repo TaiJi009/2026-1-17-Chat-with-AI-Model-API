@@ -8,7 +8,9 @@ const initialState: AppState = {
   currentConversationId: null,
   apiConfig: {
     provider: 'zhipu',
-    apiKey: '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB',
+    apiKeys: {
+      zhipu: '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB', // 智谱默认API Key
+    },
   },
   promptConfig: {
     systemPrompt: getDefaultSystemPromptSync(),
@@ -132,9 +134,22 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
 
     case 'SET_API_CONFIG':
+      // 如果payload包含provider和apiKey，更新对应模型的API key
+      // 如果只包含provider，只切换当前模型
+      // 如果包含完整的apiConfig，直接替换
+      if ('apiKeys' in action.payload) {
+        return {
+          ...state,
+          apiConfig: action.payload,
+        };
+      }
+      // 兼容旧格式，向后兼容
       return {
         ...state,
-        apiConfig: action.payload,
+        apiConfig: {
+          ...state.apiConfig,
+          ...action.payload,
+        },
       };
 
     case 'SET_PROMPT_CONFIG':

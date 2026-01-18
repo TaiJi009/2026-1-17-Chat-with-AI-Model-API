@@ -23,8 +23,23 @@ export default function MessageInput() {
     }
   }, [input]);
 
+  // 获取当前模型的API Key
+  const getCurrentApiKey = (): string => {
+    const savedKey = state.apiConfig.apiKeys?.[state.apiConfig.provider];
+    // 如果用户保存过，使用保存的；否则智谱使用默认值，其他为空
+    if (savedKey) {
+      return savedKey;
+    }
+    // 默认值（仅在智谱且用户未保存时使用）
+    if (state.apiConfig.provider === 'zhipu') {
+      return '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB';
+    }
+    return '';
+  };
+
   const handleSend = async () => {
-    if (!input.trim() || !currentConversation || !state.apiConfig.apiKey || isLoading) {
+    const currentApiKey = getCurrentApiKey();
+    if (!input.trim() || !currentConversation || !currentApiKey || isLoading) {
       return;
     }
 
@@ -152,7 +167,8 @@ export default function MessageInput() {
     );
   }
 
-  if (!state.apiConfig.apiKey) {
+  const currentApiKey = getCurrentApiKey();
+  if (!currentApiKey) {
     return (
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400">
         请先在右侧API配置面板中设置API Key

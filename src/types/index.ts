@@ -20,8 +20,8 @@ export interface PromptConfig {
 }
 
 export interface ApiConfig {
-  provider: 'zhipu' | 'openai' | 'claude' | 'tongyi' | 'wenxin' | 'spark' | 'doubao';
-  apiKey: string;
+  provider: 'zhipu' | 'openai' | 'claude' | 'tongyi' | 'wenxin' | 'spark' | 'doubao'; // 当前选择的模型提供商
+  apiKeys: Partial<Record<'zhipu' | 'openai' | 'claude' | 'tongyi' | 'wenxin' | 'spark' | 'doubao', string>>; // 存储每个模型的API Key
 }
 
 export interface AppState {

@@ -261,26 +261,30 @@ export async function callModelAPI(
   config: ApiConfig,
   messages: Message[]
 ): Promise<string> {
-  if (!config.apiKey) {
+  // 从apiKeys对象中获取当前provider的API key
+  // 兼容旧格式（如果还有apiKey字段）
+  const apiKey = config.apiKeys?.[config.provider] || (config as any).apiKey || '';
+  
+  if (!apiKey) {
     throw new Error('API Key未配置，请在右侧面板中设置API Key');
   }
 
   try {
     switch (config.provider) {
       case 'zhipu':
-        return await callZhipuAPI(config.apiKey, messages);
+        return await callZhipuAPI(apiKey, messages);
       case 'openai':
-        return await callOpenAIAPI(config.apiKey, messages);
+        return await callOpenAIAPI(apiKey, messages);
       case 'claude':
-        return await callClaudeAPI(config.apiKey, messages);
+        return await callClaudeAPI(apiKey, messages);
       case 'tongyi':
-        return await callTongyiAPI(config.apiKey, messages);
+        return await callTongyiAPI(apiKey, messages);
       case 'wenxin':
-        return await callWenxinAPI(config.apiKey, messages);
+        return await callWenxinAPI(apiKey, messages);
       case 'spark':
-        return await callSparkAPI(config.apiKey, messages);
+        return await callSparkAPI(apiKey, messages);
       case 'doubao':
-        return await callDoubaoAPI(config.apiKey, messages);
+        return await callDoubaoAPI(apiKey, messages);
       default:
         throw new Error(`不支持的API提供商: ${config.provider}`);
     }

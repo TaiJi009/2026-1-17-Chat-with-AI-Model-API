@@ -2,24 +2,85 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { ApiConfig } from '../types';
 import { getProviderDisplayName, ApiProvider } from '../utils/apiService';
-import { FiX, FiChevronLeft, FiSave, FiKey, FiLock } from 'react-icons/fi';
+import { FiX, FiChevronLeft, FiSave, FiKey, FiLock, FiCreditCard } from 'react-icons/fi';
+
+// 默认API Key（仅在用户未保存时使用）
+const DEFAULT_API_KEYS: Partial<Record<ApiProvider, string>> = {
+  zhipu: '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB',
+};
+
+// 各模型提供商的充值链接
+const RECHARGE_LINKS: Partial<Record<ApiProvider, string>> = {
+  zhipu: 'https://bigmodel.cn/',
+  openai: 'https://platform.openai.com/account/billing',
+  claude: 'https://console.anthropic.com/settings/billing',
+  tongyi: 'https://dashscope.console.aliyun.com/',
+  wenxin: 'https://console.bce.baidu.com/',
+  spark: 'https://xinghuo.xfyun.cn/',
+  doubao: 'https://console.volcengine.com/ark/overview',
+};
 
 export default function ApiConfigPanel() {
   const { state, dispatch } = useApp();
   const [provider, setProvider] = useState<ApiProvider>(state.apiConfig.provider);
-  const [apiKey, setApiKey] = useState(state.apiConfig.apiKey || '');
+  const [apiKey, setApiKey] = useState('');
 
+  // 获取当前模型的API Key（优先使用用户保存的，否则使用默认值）
+  const getCurrentApiKey = (targetProvider: ApiProvider): string => {
+    const savedKey = state.apiConfig.apiKeys?.[targetProvider];
+    if (savedKey) {
+      return savedKey; // 用户已保存
+    }
+    // 用户未保存：智谱显示默认值，其他留空
+    return DEFAULT_API_KEYS[targetProvider] || '';
+  };
+
+  // 当provider或apiKeys变化时，更新输入框的API Key
   useEffect(() => {
-    setProvider(state.apiConfig.provider);
-    setApiKey(state.apiConfig.apiKey || '');
-  }, [state.apiConfig]);
+    const currentKey = getCurrentApiKey(provider);
+    setApiKey(currentKey);
+  }, [provider, state.apiConfig.apiKeys]);
+
+  // 当外部状态中的provider变化时，同步本地state
+  useEffect(() => {
+    if (state.apiConfig.provider !== provider) {
+      setProvider(state.apiConfig.provider);
+    }
+  }, [state.apiConfig.provider]);
 
   const handleSave = () => {
+    // 保存当前模型的API key到apiKeys对象中
+    const updatedApiKeys = {
+      ...state.apiConfig.apiKeys,
+      [provider]: apiKey.trim(),
+    };
+    
     const config: ApiConfig = {
       provider,
-      apiKey: apiKey.trim(),
+      apiKeys: updatedApiKeys,
     };
     dispatch({ type: 'SET_API_CONFIG', payload: config });
+  };
+
+  const handleProviderChange = (newProvider: ApiProvider) => {
+    setProvider(newProvider);
+    // 切换模型时会自动通过useEffect更新apiKey
+    // 同时更新当前选择的模型
+    const updatedApiKeys = { ...state.apiConfig.apiKeys };
+    dispatch({ 
+      type: 'SET_API_CONFIG', 
+      payload: { 
+        provider: newProvider, 
+        apiKeys: updatedApiKeys 
+      } 
+    });
+  };
+
+  const handleRecharge = () => {
+    const rechargeUrl = RECHARGE_LINKS[provider];
+    if (rechargeUrl) {
+      window.open(rechargeUrl, '_blank');
+    }
   };
 
   const providers: ApiProvider[] = ['zhipu', 'openai', 'claude', 'tongyi', 'wenxin', 'spark', 'doubao'];
@@ -67,19 +128,28 @@ export default function ApiConfigPanel() {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             模型提供商
           </label>
-          <select
-            value={provider}
-            onChange={(e) => setProvider(e.target.value as ApiProvider)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          >
-            {providers.map((p) => (
-              <option key={p} value={p}>
-                {getProviderDisplayName(p)}
-              </option>
-            ))}
-          </select>
+          <div className="flex gap-2">
+            <select
+              value={provider}
+              onChange={(e) => handleProviderChange(e.target.value as ApiProvider)}
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+              {providers.map((p) => (
+                <option key={p} value={p}>
+                  {getProviderDisplayName(p)}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleRecharge}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
+              title="前往充值"
+            >
+              <FiCreditCard className="w-4 h-4" />
+            </button>
+          </div>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            选择要使用的大模型提供商
+            选择要使用的大模型提供商，点击充值图标前往充值页面
           </p>
         </div>
 
@@ -105,9 +175,9 @@ export default function ApiConfigPanel() {
             <strong>提示：</strong>
           </p>
           <ul className="mt-1 text-xs text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
-            <li>智谱GLM：默认模型，已配置默认API Key</li>
+            <li>智谱GLM：默认模型，未保存时自动使用默认API Key</li>
             <li>其他模型：请前往各提供商官网获取API Key</li>
-            <li>切换模型后需要重新输入对应的API Key</li>
+            <li>每个模型的API Key会分别保存，切换模型时自动加载</li>
           </ul>
         </div>
       </div>

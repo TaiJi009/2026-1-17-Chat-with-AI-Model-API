@@ -65,8 +65,22 @@ export default function MessageList() {
     setEditContent('');
   };
 
+  // 获取当前模型的API Key
+  const getCurrentApiKey = (): string => {
+    const savedKey = state.apiConfig.apiKeys?.[state.apiConfig.provider];
+    if (savedKey) {
+      return savedKey;
+    }
+    // 默认值（仅在智谱且用户未保存时使用）
+    if (state.apiConfig.provider === 'zhipu') {
+      return '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB';
+    }
+    return '';
+  };
+
   const handleResend = async (messageId: string) => {
-    if (!currentConversation || !state.apiConfig.apiKey || isResending || !editContent.trim()) {
+    const currentApiKey = getCurrentApiKey();
+    if (!currentConversation || !currentApiKey || isResending || !editContent.trim()) {
       return;
     }
 
