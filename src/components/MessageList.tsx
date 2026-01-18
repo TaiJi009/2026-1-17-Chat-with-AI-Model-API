@@ -165,10 +165,12 @@ function StreamingMarkdown({
 export default function MessageList() {
   const { state, dispatch } = useApp();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [isResending, setIsResending] = useState(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const currentConversation = state.conversations.find(
@@ -177,20 +179,35 @@ export default function MessageList() {
 
   const messages = currentConversation?.messages || [];
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  // 检查是否在底部附近（距离底部100px内）
+  const checkIfNearBottom = () => {
+    if (!messagesContainerRef.current) return false;
+    const container = messagesContainerRef.current;
+    const threshold = 100; // 距离底部100px内算作底部
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    return distanceFromBottom <= threshold;
+  };
 
-  // 流式显示时也自动滚动
+  // 监听滚动事件，检测用户是否手动滚动
   useEffect(() => {
-    const streamingMessage = messages.find(m => m.role === 'assistant' && m.isStreaming);
-    if (streamingMessage) {
-      const scrollInterval = setInterval(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-      return () => clearInterval(scrollInterval);
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const nearBottom = checkIfNearBottom();
+      setShouldAutoScroll(nearBottom);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 消息变化时，如果用户在底部附近则自动滚动
+  useEffect(() => {
+    if (shouldAutoScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, shouldAutoScroll]);
 
   const formatTime = (timestamp: number) => {
     return new Date(timestamp).toLocaleTimeString('zh-CN', {
@@ -394,7 +411,7 @@ export default function MessageList() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
+    <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
       {messages.map((message) => (
         <div
           key={message.id}
