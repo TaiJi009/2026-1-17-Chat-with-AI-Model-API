@@ -32,30 +32,42 @@ function StreamingMarkdown({
     // 当消息ID变化时，重置初始化状态（切换会话时）
     if (initializedMessageIdRef.current !== messageId) {
       initializedMessageIdRef.current = messageId;
-      // 重置所有状态
-      setDisplayedContent('');
-      contentIndexRef.current = 0;
-      prevContentRef.current = '';
+      
+      // 如果内容已存在且不在流式状态，立即设置（同步操作，避免异步问题）
+      if (content && !isStreaming) {
+        // 已保存的消息，立即设置所有状态（避免重新流式显示）
+        setDisplayedContent(content);
+        contentIndexRef.current = content.length;
+        prevContentRef.current = content;
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        return; // 直接返回，不继续执行后续逻辑
+      } else {
+        // 重置所有状态
+        setDisplayedContent('');
+        contentIndexRef.current = 0;
+        prevContentRef.current = '';
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      }
+    }
+
+    // 如果不在流式状态且内容已存在，直接显示（避免后续逻辑触发）
+    if (!isStreaming && content && content.length > 0) {
+      if (displayedContent !== content) {
+        setDisplayedContent(content);
+        contentIndexRef.current = content.length;
+        prevContentRef.current = content;
+      }
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-    }
-
-    // 初始化检查：如果内容已存在且不在流式状态，直接显示全部内容
-    // 使用 prevContentRef 来判断是否是首次加载（prevContentRef 为空表示首次）
-    if (initializedMessageIdRef.current === messageId && prevContentRef.current === '') {
-      if (content && !isStreaming) {
-        // 已保存的消息，直接显示全部内容（仅在首次初始化时）
-        setDisplayedContent(content);
-        contentIndexRef.current = content.length;
-        prevContentRef.current = content;
-        return;
-      } else if (!content && !isStreaming) {
-        // 空内容且不在流式状态，直接返回
-        prevContentRef.current = '';
-        return;
-      }
+      return; // 非流式状态直接返回，不执行流式逻辑
     }
 
     // 如果内容发生变化
