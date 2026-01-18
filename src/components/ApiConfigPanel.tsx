@@ -88,15 +88,15 @@ export default function ApiConfigPanel() {
             <FiLock className="w-4 h-4 inline mr-1" />
             API Key
           </label>
-          <textarea
+          <input
+            type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="请输入API Key..."
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono text-sm"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
           />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            API Key仅存储在本地浏览器中，不会上传到服务器。请在安全的设备上使用。
+            API Key以密码形式保护，仅存储在本地浏览器中，不会上传到服务器。请在安全的设备上使用。
           </p>
         </div>
 
