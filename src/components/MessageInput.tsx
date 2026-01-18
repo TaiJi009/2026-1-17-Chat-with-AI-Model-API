@@ -4,7 +4,6 @@ import { useApp } from '../contexts/AppContext';
 import { Message } from '../types';
 import { callModelAPI } from '../utils/apiService';
 import { generateTitle } from '../utils/titleGenerator';
-import { parseAIResponse } from '../utils/responseParser';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
 
 export default function MessageInput() {

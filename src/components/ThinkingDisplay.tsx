@@ -125,8 +125,8 @@ export default function ThinkingDisplay({ thinkingChain, answer, isStreaming = f
               }}
             >
               {displayedThinking}
-              {showThinkingCursor && <span className="animate-pulse text-gray-400 dark:text-gray-600">·</span>}
             </ReactMarkdown>
+            {showThinkingCursor && <span className="inline-block animate-pulse text-gray-400 dark:text-gray-600 ml-1">·</span>}
           </div>
         </div>
       )}
@@ -161,8 +161,8 @@ export default function ThinkingDisplay({ thinkingChain, answer, isStreaming = f
               }}
             >
               {displayedAnswer}
-              {showAnswerCursor && <span className="animate-pulse text-gray-400 dark:text-gray-600">·</span>}
             </ReactMarkdown>
+            {showAnswerCursor && <span className="inline-block animate-pulse text-gray-400 dark:text-gray-600 ml-1">·</span>}
           </div>
         </div>
       )}
