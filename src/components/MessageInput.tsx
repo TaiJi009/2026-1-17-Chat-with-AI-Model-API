@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { Message } from '../types';
-import { callAPI } from '../utils/api';
+import { Message, Conversation } from '../types';
+import { callModelAPI } from '../utils/apiService';
 import { generateTitle } from '../utils/titleGenerator';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
 
@@ -12,9 +12,9 @@ export default function MessageInput() {
   const [isLoading, setIsLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const currentConversation = state.conversations.find(
-    c => c.id === state.currentConversationId
-  );
+  const currentConversation = state.currentConversationId
+    ? state.conversations.find(c => c.id === state.currentConversationId)
+    : null;
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -23,9 +23,38 @@ export default function MessageInput() {
     }
   }, [input]);
 
+  // 获取当前模型的API Key
+  const getCurrentApiKey = (): string => {
+    const savedKey = state.apiConfig.apiKeys?.[state.apiConfig.provider];
+    // 如果用户保存过，使用保存的；否则智谱使用默认值，其他为空
+    if (savedKey) {
+      return savedKey;
+    }
+    // 默认值（仅在智谱且用户未保存时使用）
+    if (state.apiConfig.provider === 'zhipu') {
+      return '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB';
+    }
+    return '';
+  };
+
   const handleSend = async () => {
-    if (!input.trim() || !currentConversation || !state.apiConfig || isLoading) {
+    const currentApiKey = getCurrentApiKey();
+    if (!input.trim() || !currentApiKey || isLoading) {
       return;
+    }
+
+    // 如果当前没有会话（空白对话框），创建新会话
+    let conversationToUse = currentConversation;
+    if (!conversationToUse) {
+      const newConversation: Conversation = {
+        id: `conv-${Date.now()}`,
+        name: `会话 ${state.conversations.length + 1}`,
+        messages: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      dispatch({ type: 'ADD_CONVERSATION', payload: newConversation });
+      conversationToUse = newConversation;
     }
 
     const userMessage: Message = {
@@ -37,7 +66,7 @@ export default function MessageInput() {
 
     dispatch({
       type: 'ADD_MESSAGE',
-      payload: { conversationId: currentConversation.id, message: userMessage },
+      payload: { conversationId: conversationToUse.id, message: userMessage },
     });
 
     setInput('');
@@ -58,7 +87,7 @@ export default function MessageInput() {
       }
 
       // Add conversation history (excluding system messages as they're already handled)
-      messages.push(...currentConversation.messages.filter(m => m.role !== 'system'));
+      messages.push(...conversationToUse.messages.filter(m => m.role !== 'system'));
 
       // Add new user message (no template processing)
       messages.push(userMessage);
@@ -74,39 +103,59 @@ export default function MessageInput() {
 
       dispatch({
         type: 'ADD_MESSAGE',
-        payload: { conversationId: currentConversation.id, message: assistantMessage },
+        payload: { conversationId: conversationToUse.id, message: assistantMessage },
       });
 
       // 记录发送前的消息数量，用于判断是否是第一轮对话
-      const messagesBeforeSend = currentConversation.messages.filter(m => m.role !== 'system');
+      const messagesBeforeSend = conversationToUse.messages.filter(m => m.role !== 'system');
       const isFirstRound = messagesBeforeSend.length === 0;
 
-      // Call API with streaming
-      await callAPI(
-        state.apiConfig,
-        messages,
-        (chunk) => {
-          dispatch({
-            type: 'UPDATE_MESSAGE',
-            payload: {
-              conversationId: currentConversation.id,
-              messageId: assistantMessageId,
-              content: assistantMessage.content + chunk,
-            },
-          });
-          assistantMessage.content += chunk;
-        }
-      );
+      // 标记消息为流式状态
+      dispatch({
+        type: 'SET_MESSAGE_STREAMING',
+        payload: {
+          conversationId: conversationToUse.id,
+          messageId: assistantMessageId,
+          isStreaming: true,
+        },
+      });
+
+      // Call model API
+      const responseContent = await callModelAPI(state.apiConfig, messages);
+
+      // 先设置完整内容，但保持流式状态以便逐字显示
+      dispatch({
+        type: 'UPDATE_MESSAGE',
+        payload: {
+          conversationId: conversationToUse.id,
+          messageId: assistantMessageId,
+          content: responseContent,
+        },
+      });
+      assistantMessage.content = responseContent;
+
+      // 流式显示完成后，关闭流式状态
+      // 延迟一点时间确保流式动画完成
+      setTimeout(() => {
+        dispatch({
+          type: 'SET_MESSAGE_STREAMING',
+          payload: {
+            conversationId: conversationToUse.id,
+            messageId: assistantMessageId,
+            isStreaming: false,
+          },
+        });
+      }, Math.max(responseContent.length * 30, 1000)); // 根据内容长度计算时间，至少1秒
 
       // 检测第一轮对话完成并自动生成标题
       // 第一轮对话：发送前没有消息（不包括system消息），且未手动重命名
-      if (isFirstRound && !currentConversation.isManuallyRenamed) {
+      if (isFirstRound && !conversationToUse.isManuallyRenamed) {
         const autoTitle = generateTitle(userMessage.content, assistantMessage.content);
         
         dispatch({
           type: 'UPDATE_CONVERSATION_TITLE',
           payload: {
-            conversationId: currentConversation.id,
+            conversationId: conversationToUse.id,
             title: autoTitle,
           },
         });
@@ -120,7 +169,7 @@ export default function MessageInput() {
       dispatch({
         type: 'UPDATE_MESSAGE',
         payload: {
-          conversationId: currentConversation.id,
+          conversationId: conversationToUse.id,
           messageId: assistantMessageId,
           content: `错误: ${errorMessage}`,
         },
@@ -147,24 +196,19 @@ export default function MessageInput() {
     }
   };
 
-  if (!currentConversation) {
-    return (
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400">
-        请先选择一个会话或创建新会话
-      </div>
-    );
-  }
+  // 移除这个检查，允许在空白对话框状态下显示输入框
 
-  if (!state.apiConfig) {
+  const currentApiKey = getCurrentApiKey();
+  if (!currentApiKey) {
     return (
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400">
-        请先配置API连接
+        请先在设置中配置API Key
       </div>
     );
   }
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 p-2 sm:p-4">
+    <div className="border-t border-gray-200 dark:border-gray-700 p-2 sm:p-4 relative">
       <div className="flex items-end gap-2">
         <div className="flex-1 relative">
           <textarea
@@ -180,7 +224,7 @@ export default function MessageInput() {
         </div>
         <button
           onClick={handleClear}
-          disabled={isLoading || currentConversation.messages.length === 0}
+          disabled={isLoading || !currentConversation || currentConversation.messages.length === 0}
           className="p-2 sm:p-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           title="清空对话"
         >
@@ -195,11 +239,6 @@ export default function MessageInput() {
           <FiSend className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
-      {isLoading && (
-        <div className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center">
-          AI正在思考...
-        </div>
-      )}
     </div>
   );
 }

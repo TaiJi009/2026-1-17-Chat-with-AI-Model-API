@@ -6,32 +6,32 @@ import { fileURLToPath } from 'url'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
-// 自定义插件：复制 real-readme.md 到 public 目录
+// 自定义插件：复制 系统默认提示词工程.md 到 public 目录
 function copyPromptFile() {
   return {
     name: 'copy-prompt-file',
     buildStart() {
-      const sourceFile = join(__dirname, 'prompt-engineering', 'real-readme.md')
-      const targetDir = join(__dirname, 'public', 'prompt-engineering')
-      const targetFile = join(targetDir, 'real-readme.md')
+      const sourceFile = join(__dirname, '系统默认提示词工程.md')
+      const targetDir = join(__dirname, 'public')
+      const targetFile = join(targetDir, '系统默认提示词工程.md')
       
       if (existsSync(sourceFile)) {
         if (!existsSync(targetDir)) {
           mkdirSync(targetDir, { recursive: true })
         }
         copyFileSync(sourceFile, targetFile)
-        console.log('✓ Copied prompt-engineering/real-readme.md to public/')
+        console.log('✓ Copied 系统默认提示词工程.md to public/')
       } else {
-        console.warn('⚠ prompt-engineering/real-readme.md not found')
+        console.warn('⚠ 系统默认提示词工程.md not found')
       }
     },
     // 开发模式下也复制文件
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        if (req.url?.includes('/prompt-engineering/real-readme.md')) {
-          const sourceFile = join(__dirname, 'prompt-engineering', 'real-readme.md')
-          const targetDir = join(__dirname, 'public', 'prompt-engineering')
-          const targetFile = join(targetDir, 'real-readme.md')
+        if (req.url?.includes('/系统默认提示词工程.md') || req.url?.includes(encodeURIComponent('系统默认提示词工程.md'))) {
+          const sourceFile = join(__dirname, '系统默认提示词工程.md')
+          const targetDir = join(__dirname, 'public')
+          const targetFile = join(targetDir, '系统默认提示词工程.md')
           
           if (existsSync(sourceFile)) {
             if (!existsSync(targetDir)) {

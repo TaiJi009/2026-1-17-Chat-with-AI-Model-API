@@ -30,3 +30,23 @@ body {
   width: 100%;
   min-height: 100vh;
 }
+
+/* 浏览器兼容性增强 */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 确保滚动行为在所有浏览器上都能正常工作 */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 确保主题切换在所有浏览器上都能正常工作 */
+html.dark {
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+}

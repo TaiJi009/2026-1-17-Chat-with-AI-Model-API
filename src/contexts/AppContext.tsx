@@ -3,16 +3,14 @@ import { AppState, AppAction } from '../types';
 import { saveState, loadState } from '../utils/storage';
 import { getDefaultSystemPromptSync } from '../utils/defaultSystemPrompt';
 
-// 智谱AI默认API Key
-const DEFAULT_ZHIPU_API_KEY = '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB';
-
 const initialState: AppState = {
   conversations: [],
   currentConversationId: null,
   apiConfig: {
-    endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-    apiKey: DEFAULT_ZHIPU_API_KEY,
-    format: 'zhipu',
+    provider: 'zhipu',
+    apiKeys: {
+      zhipu: '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB', // 智谱默认API Key
+    },
   },
   promptConfig: {
     systemPrompt: getDefaultSystemPromptSync(),
@@ -20,6 +18,8 @@ const initialState: AppState = {
   theme: 'light',
   sidebarCollapsed: true, // 移动端默认折叠
   promptPanelCollapsed: true,
+  apiConfigPanelCollapsed: true,
+  settingsPanelCollapsed: true, // 设置面板默认折叠
   editingMessageId: null,
 };
 
@@ -47,6 +47,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         conversations: state.conversations.map(c =>
           c.id === action.payload.id ? action.payload : c
+        ),
+      };
+
+    case 'TOGGLE_PIN_CONVERSATION':
+      return {
+        ...state,
+        conversations: state.conversations.map(c =>
+          c.id === action.payload ? { ...c, isPinned: !c.isPinned } : c
         ),
       };
 
@@ -80,6 +88,24 @@ function appReducer(state: AppState, action: AppAction): AppState {
                 messages: c.messages.map(m =>
                   m.id === action.payload.messageId
                     ? { ...m, content: action.payload.content }
+                    : m
+                ),
+                updatedAt: Date.now(),
+              }
+            : c
+        ),
+      };
+
+    case 'SET_MESSAGE_STREAMING':
+      return {
+        ...state,
+        conversations: state.conversations.map(c =>
+          c.id === action.payload.conversationId
+            ? {
+                ...c,
+                messages: c.messages.map(m =>
+                  m.id === action.payload.messageId
+                    ? { ...m, isStreaming: action.payload.isStreaming }
                     : m
                 ),
                 updatedAt: Date.now(),
@@ -127,6 +153,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
 
     case 'SET_API_CONFIG':
+      // 直接使用payload，因为ApiConfig总是包含apiKeys
       return {
         ...state,
         apiConfig: action.payload,
@@ -156,10 +183,59 @@ function appReducer(state: AppState, action: AppAction): AppState {
         promptPanelCollapsed: !state.promptPanelCollapsed,
       };
 
-    case 'LOAD_STATE':
+    case 'TOGGLE_API_CONFIG_PANEL':
       return {
         ...state,
-        ...action.payload,
+        apiConfigPanelCollapsed: !state.apiConfigPanelCollapsed,
+      };
+
+    case 'TOGGLE_SETTINGS_PANEL':
+      return {
+        ...state,
+        settingsPanelCollapsed: !state.settingsPanelCollapsed,
+      };
+
+    case 'LOAD_STATE':
+      // 加载状态时，确保所有消息的 isStreaming 都为 false（防止已保存消息重新流式显示）
+      const loadedState = action.payload;
+      if (loadedState.conversations) {
+        loadedState.conversations = loadedState.conversations.map(conv => ({
+          ...conv,
+          messages: conv.messages.map(msg => ({
+            ...msg,
+            isStreaming: false,
+          })),
+        }));
+      }
+      
+      // 确保API配置存在且包含默认的智谱API Key
+      const defaultZhipuKey = '403c7c9f1f124bf684a881fa01376bb8.IzkE5f2FI6WcXmJB';
+      if (!loadedState.apiConfig) {
+        loadedState.apiConfig = {
+          provider: 'zhipu',
+          apiKeys: { zhipu: defaultZhipuKey },
+        };
+      } else {
+        // 确保provider存在，默认为智谱
+        if (!loadedState.apiConfig.provider) {
+          loadedState.apiConfig.provider = 'zhipu';
+        }
+        // 确保apiKeys存在
+        if (!loadedState.apiConfig.apiKeys) {
+          loadedState.apiConfig.apiKeys = { zhipu: defaultZhipuKey };
+        } else {
+          // 如果智谱的API Key不存在，添加默认值
+          if (!loadedState.apiConfig.apiKeys.zhipu) {
+            loadedState.apiConfig.apiKeys.zhipu = defaultZhipuKey;
+          }
+        }
+      }
+      
+      return {
+        ...state,
+        ...loadedState,
+        // 每次加载状态后，重置为空白对话框（不显示之前的会话）
+        currentConversationId: null,
       };
 
     default:
@@ -195,13 +271,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       theme: state.theme,
       sidebarCollapsed: state.sidebarCollapsed,
       promptPanelCollapsed: state.promptPanelCollapsed,
+      apiConfigPanelCollapsed: state.apiConfigPanelCollapsed,
+      settingsPanelCollapsed: state.settingsPanelCollapsed,
       editingMessageId: state.editingMessageId,
     });
   }, [state]);
 
   // Apply theme to document
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', state.theme === 'dark');
+    // 确保 DOM 已加载
+    if (typeof document !== 'undefined' && document.documentElement) {
+      const htmlElement = document.documentElement;
+      if (state.theme === 'dark') {
+        htmlElement.classList.add('dark');
+      } else {
+        htmlElement.classList.remove('dark');
+      }
+    }
   }, [state.theme]);
 
   return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>;
