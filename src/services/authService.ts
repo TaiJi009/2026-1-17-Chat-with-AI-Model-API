@@ -1,4 +1,4 @@
-import { get, post } from '../utils/apiClient';
+import { get, post, getToken } from '../utils/apiClient';
 import { setToken, clearToken } from '../utils/apiClient';
 import { User } from '../types';
 

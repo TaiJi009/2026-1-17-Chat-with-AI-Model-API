@@ -9,7 +9,7 @@ export interface ApiResponse<T = any> {
 }
 
 // 获取Token
-function getToken(): string | null {
+export function getToken(): string | null {
   return localStorage.getItem('auth_token');
 }
 
@@ -29,9 +29,9 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   const token = getToken();
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string> || {}),
   };
 
   if (token) {
