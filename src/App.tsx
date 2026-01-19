@@ -1,12 +1,16 @@
 import { AppProvider, useApp } from './contexts/AppContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { useAuthSync } from './hooks/useAuthSync';
 import ConversationList from './components/ConversationList';
 import ChatArea from './components/ChatArea';
 import SettingsPanel from './components/SettingsPanel';
 import ThemeToggle from './components/ThemeToggle';
+import UserMenu from './components/UserMenu';
 import { FiMenu, FiZap } from 'react-icons/fi';
 
 function AppContent() {
   const { state, dispatch } = useApp();
+  useAuthSync(); // 同步认证状态
 
   return (
     <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-950">
@@ -34,6 +38,8 @@ function AppContent() {
 
         {/* Right: Controls */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* User Menu */}
+          <UserMenu />
           {/* Theme Toggle */}
           <div className="flex-shrink-0">
             <ThemeToggle />
@@ -66,9 +72,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </AuthProvider>
   );
 }
 

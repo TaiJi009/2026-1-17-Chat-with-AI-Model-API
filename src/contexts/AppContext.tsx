@@ -15,12 +15,14 @@ const initialState: AppState = {
   promptConfig: {
     systemPrompt: getDefaultSystemPromptSync(),
   },
-  theme: 'light',
+  theme: 'dark', // 默认夜间模式（免费功能）
   sidebarCollapsed: true, // 移动端默认折叠
   promptPanelCollapsed: true,
   apiConfigPanelCollapsed: true,
   settingsPanelCollapsed: true, // 设置面板默认折叠
   editingMessageId: null,
+  user: null,
+  isPro: false,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -195,6 +197,20 @@ function appReducer(state: AppState, action: AppAction): AppState {
         settingsPanelCollapsed: !state.settingsPanelCollapsed,
       };
 
+    case 'SET_USER':
+      return {
+        ...state,
+        user: action.payload,
+        isPro: action.payload?.isPro || false,
+      };
+
+    case 'SET_PRO_STATUS':
+      return {
+        ...state,
+        isPro: action.payload,
+        user: state.user ? { ...state.user, isPro: action.payload } : null,
+      };
+
     case 'LOAD_STATE':
       // 加载状态时，确保所有消息的 isStreaming 都为 false（防止已保存消息重新流式显示）
       const loadedState = action.payload;
@@ -236,6 +252,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...loadedState,
         // 每次加载状态后，重置为空白对话框（不显示之前的会话）
         currentConversationId: null,
+        // 确保user和isPro字段存在
+        user: loadedState.user || null,
+        isPro: loadedState.isPro || false,
       };
 
     default:
@@ -274,6 +293,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       apiConfigPanelCollapsed: state.apiConfigPanelCollapsed,
       settingsPanelCollapsed: state.settingsPanelCollapsed,
       editingMessageId: state.editingMessageId,
+      user: state.user,
+      isPro: state.isPro,
     });
   }, [state]);
 

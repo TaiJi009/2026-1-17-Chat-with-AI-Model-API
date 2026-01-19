@@ -27,6 +27,25 @@ export interface ApiConfig {
   apiKeys: Partial<Record<'zhipu' | 'openai' | 'claude' | 'tongyi' | 'wenxin' | 'spark' | 'doubao', string>>; // 存储每个模型的API Key
 }
 
+// 用户相关类型
+export interface User {
+  id: string;
+  phone: string | null;
+  isPro: boolean;
+  proExpiresAt: Date | null;
+  createdAt?: Date;
+}
+
+// 订单相关类型
+export interface Order {
+  id: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'failed' | 'refunded';
+  createdAt: Date;
+  paidAt: Date | null;
+  expiresAt: Date | null;
+}
+
 export interface AppState {
   conversations: Conversation[];
   currentConversationId: string | null;
@@ -38,6 +57,8 @@ export interface AppState {
   apiConfigPanelCollapsed: boolean;
   settingsPanelCollapsed: boolean; // 设置面板的展开/收起状态
   editingMessageId: string | null; // 正在编辑的消息ID
+  user: User | null; // 用户信息
+  isPro: boolean; // Pro状态（从user.isPro派生）
 }
 
 export type AppAction =
@@ -59,4 +80,6 @@ export type AppAction =
   | { type: 'TOGGLE_PROMPT_PANEL' }
   | { type: 'TOGGLE_API_CONFIG_PANEL' }
   | { type: 'TOGGLE_SETTINGS_PANEL' }
-  | { type: 'LOAD_STATE'; payload: Partial<AppState> };
+  | { type: 'LOAD_STATE'; payload: Partial<AppState> }
+  | { type: 'SET_USER'; payload: User | null }
+  | { type: 'SET_PRO_STATUS'; payload: boolean };
