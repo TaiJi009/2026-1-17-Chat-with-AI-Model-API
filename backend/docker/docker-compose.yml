@@ -18,6 +18,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+    restart: unless-stopped
 
   backend:
     build:
@@ -31,16 +34,41 @@ services:
       DB_NAME: ${DB_NAME:-chat_app}
       DB_USER: ${DB_USER:-user}
       DB_PASSWORD: ${DB_PASSWORD:-password}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      WECHAT_APP_ID: ${WECHAT_APP_ID}
+      WECHAT_MCH_ID: ${WECHAT_MCH_ID}
+      WECHAT_API_KEY: ${WECHAT_API_KEY}
+      WECHAT_NOTIFY_URL: ${WECHAT_NOTIFY_URL}
+      WECHAT_SANDBOX: ${WECHAT_SANDBOX:-false}
+      TENCENT_SMS_SECRET_ID: ${TENCENT_SMS_SECRET_ID}
+      TENCENT_SMS_SECRET_KEY: ${TENCENT_SMS_SECRET_KEY}
+      TENCENT_SMS_APP_ID: ${TENCENT_SMS_APP_ID}
+      TENCENT_SMS_SIGN_NAME: ${TENCENT_SMS_SIGN_NAME}
+      TENCENT_SMS_TEMPLATE_ID: ${TENCENT_SMS_TEMPLATE_ID}
       PORT: 3000
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-production}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
     ports:
       - "${PORT:-3000}:3000"
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
-      - ../.env:/app/.env
+      - ../.env:/app/.env:ro
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

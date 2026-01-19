@@ -1,75 +1,136 @@
 # AI Model Chat Interface
 
-一个类似 ChatGPT 的网页聊天界面，通过 n8n webhook 与 AI 服务集成，支持自定义系统提示词来定义AI行为。
+一个功能完整的 AI 聊天应用，支持多模型提供商、账号系统、付费订阅和自定义提示词工程。类似 ChatGPT 的用户体验，通过 N8N Webhook 或直接 API 调用与 AI 服务集成。
 
 ## 功能特性
 
-- 🔗 **N8N集成**：通过n8n webhook处理所有AI交互，AI逻辑完全在n8n工作流中
-- 💬 **多会话管理**：创建、切换、删除多个对话会话
-- 📝 **自定义系统提示词**：通过系统提示词定义AI的角色和行为
-- 🎨 **深色/浅色主题**：支持主题切换
-- 💾 **数据持久化**：使用 localStorage 保存配置和对话历史
-- 📱 **响应式设计**：适配手机和电脑端，移动端优化布局
+- 💬 **多会话管理**：创建、切换、删除、置顶多个对话会话
+- 🤖 **多模型支持**：智谱 GLM、OpenAI、Claude、通义千问、文心一言、Spark、豆包等
+- 📝 **自定义系统提示词**：通过系统提示词定义 AI 的角色和行为
+- 🎨 **主题切换**：支持深色/浅色主题，Pro 用户可使用日间模式
+- 📱 **响应式设计**：完美适配手机和电脑端
+- 🔄 **流式输出**：支持 AI 回复的流式输出，实时显示生成内容
+- 📱 **手机号登录**：支持手机号验证码登录/注册
+- 💳 **微信支付**：支持微信扫码支付，10元/月订阅 Pro 功能
+- 📊 **订单管理**：查看订单状态和订阅信息
 
 ## 技术栈
 
-- React 18 + TypeScript
-- Vite
-- Tailwind CSS
-- react-markdown (Markdown 渲染)
-- react-syntax-highlighter (代码高亮)
+**前端**：React 18 + TypeScript + Vite + Tailwind CSS  
+**后端**：Node.js + Express + TypeScript + PostgreSQL  
+**部署**：GitHub Pages（前端）+ Docker（后端）  
+**认证**：JWT Token  
+**支付**：微信支付 Native 支付  
+**短信**：腾讯云短信服务
 
-## 开发
+## 快速开始
+
+### 前端开发
 
 ```bash
-# 安装依赖
 npm install
-
-# 启动开发服务器
 npm run dev
-
-# 构建生产版本
-npm run build
-
-# 预览生产构建
-npm run preview
 ```
 
-## 部署到 GitHub Pages
+开发服务器运行在 `http://localhost:5173`
+
+### 后端开发
+
+```bash
+cd backend
+npm install
+npm run migrate  # 首次启动需要
+npm run dev
+```
+
+后端服务器运行在 `http://localhost:3000`
+
+### Docker 部署（推荐）
+
+```bash
+cd backend/docker
+docker-compose up -d
+```
+
+详细部署说明请参考：[Docker 部署快速指南](docs/Docker部署快速指南.md)
+
+## 配置说明
+
+### 后端环境变量
+
+在 `backend/` 目录下创建 `.env` 文件，配置以下关键项：
+
+```env
+# 数据库配置
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=user
+DB_PASSWORD=your-secure-password
+DB_NAME=chat_app
+
+# JWT 配置
+JWT_SECRET=your-secret-key-change-this
+
+# 微信支付配置
+WECHAT_APP_ID=your-app-id
+WECHAT_MCH_ID=your-merchant-id
+WECHAT_API_KEY=your-api-key
+
+# 腾讯云短信配置
+TENCENT_SMS_SECRET_ID=your-secret-id
+TENCENT_SMS_SECRET_KEY=your-secret-key
+```
+
+完整配置说明请参考：[账号功能与付费功能文档](docs/账号功能与付费功能/)
+
+### AI API 配置
+
+在网站右侧的"API 配置"面板中：
+1. 选择 AI 模型提供商（智谱、OpenAI、Claude 等）
+2. 输入对应的 API Key
+3. 点击保存
+
+或配置 N8N Webhook，详细说明请参考：[N8N Webhook 集成指南](docs/N8N%20Webhook%20集成指南.md)
+
+## 部署
+
+### 前端部署
 
 1. 将代码推送到 GitHub 仓库
 2. 在仓库设置中启用 GitHub Pages
 3. GitHub Actions 会自动构建和部署
 
-访问地址：`https://[username].github.io/2026-1-17-Chat-with-AI-Model-API/`
+### 后端部署
 
-## 使用说明
+使用 Docker Compose 一键部署：
 
-1. **配置 N8N Webhook**：
-   - 在 n8n 中创建工作流并获取 webhook URL
-   - 在网站右侧的"提示词配置"面板中输入 n8n webhook URL
-   - 点击保存
+```bash
+cd backend/docker
+docker-compose up -d
+```
 
-2. **配置系统提示词**（可选）：
-   - 在右侧面板配置系统提示词
-   - 系统提示词会发送给n8n，用于定义AI的角色和行为
+或使用 Docker 托管平台（Railway、Render、Fly.io 等），详细说明请参考：[Docker 部署快速指南](docs/Docker部署快速指南.md)
 
-3. **创建会话**：点击左侧的"新建会话"按钮
+## 文档
 
-4. **开始对话**：在输入框中输入消息，按 Enter 发送
+- [项目概述](docs/账号功能与付费功能/01-项目概述.md) - 功能目标和技术选型
+- [技术架构](docs/账号功能与付费功能/02-技术架构.md) - 系统架构和数据流向
+- [系统流程](docs/账号功能与付费功能/03-系统流程.md) - 登录、支付和权限控制流程
+- [API 接口文档](docs/账号功能与付费功能/05-API接口文档.md) - 认证和支付接口说明
+- [Docker 部署快速指南](docs/Docker部署快速指南.md) - Docker 部署详细说明
+- [N8N Webhook 集成指南](docs/N8N%20Webhook%20集成指南.md) - N8N 工作流配置说明
+- [提示词工程](prompt-engineering/README.md) - 提示词工程文档
 
-## N8N 工作流配置
+## 贡献
 
-网站会将对话数据发送到 n8n webhook，n8n 处理后返回AI回复。
+欢迎提交 Issue 或 Pull Request！
 
-### 工作流节点配置
-
-- **Webhook节点**：接收网站发送的POST请求
-- **AI调用节点**：在n8n中调用AI服务（OpenAI/HTTP Request/Code等）
-- **Respond to Webhook节点**：返回JSON响应给网站
-
-详细配置说明请参考：[N8N集成文档](docs/n8n-integration.md)
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
 
 ## 许可证
 
-MIT
+MIT License
