@@ -109,7 +109,7 @@ function StreamingMarkdown({
           clearInterval(timerRef.current);
         }
 
-        timerRef.current = window.setInterval(() => {
+        timerRef.current = setInterval(() => {
           if (contentIndexRef.current < content.length) {
             contentIndexRef.current += 1;
             setDisplayedContent(content.substring(0, contentIndexRef.current));
@@ -207,8 +207,14 @@ export default function MessageList() {
 
   // 消息变化时，如果用户在底部附近则自动滚动
   useEffect(() => {
-    if (shouldAutoScroll) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (shouldAutoScroll && messagesEndRef.current) {
+      // 使用兼容性更好的滚动方式
+      try {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      } catch (e) {
+        // 降级方案：直接滚动到底部
+        messagesEndRef.current.scrollIntoView();
+      }
     }
   }, [messages, shouldAutoScroll]);
 
@@ -221,13 +227,29 @@ export default function MessageList() {
     if (!streamingMessage) return;
 
     // 使用 MutationObserver 监听 DOM 变化（流式内容逐字更新时）
+    // 检查浏览器是否支持 MutationObserver
+    if (typeof MutationObserver === 'undefined') {
+      // 降级方案：使用 setInterval 定期检查
+      const fallbackInterval = setInterval(() => {
+        const nearBottom = checkIfNearBottom();
+        if (nearBottom) {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        }
+      }, 100);
+      return () => clearInterval(fallbackInterval);
+    }
+
     const observer = new MutationObserver(() => {
       // 检查是否应该自动滚动（用户在底部）
       // 注意：这里不直接使用 shouldAutoScroll，而是在每次 DOM 变化时重新检查
       // 因为 shouldAutoScroll 可能在滚动监听器中更新，可能存在延迟
       const nearBottom = checkIfNearBottom();
-      if (nearBottom) {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      if (nearBottom && messagesEndRef.current) {
+        try {
+          messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+        } catch (e) {
+          messagesEndRef.current.scrollIntoView();
+        }
       }
     });
 
@@ -249,13 +271,36 @@ export default function MessageList() {
 
   const handleCopy = async (content: string, messageId: string) => {
     try {
-      await navigator.clipboard.writeText(content);
+      // 优先使用现代 Clipboard API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(content);
+      } else {
+        // 降级方案：使用传统的 execCommand 方法
+        const textArea = document.createElement('textarea');
+        textArea.value = content;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          const successful = document.execCommand('copy');
+          if (!successful) {
+            throw new Error('execCommand failed');
+          }
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
       setCopiedId(messageId);
       setTimeout(() => {
         setCopiedId(null);
       }, 2000);
     } catch (err) {
       console.error('复制失败:', err);
+      // 可以在这里添加用户提示
     }
   };
 

@@ -43,7 +43,7 @@ export default function ThinkingDisplay({ thinkingChain, answer, isStreaming = f
     // 开始流式显示思维链
     if (thinkingChain) {
       const interval = 20; // 每个字符间隔20ms
-      thinkingTimerRef.current = window.setInterval(() => {
+      thinkingTimerRef.current = setInterval(() => {
         if (thinkingIndexRef.current < thinkingChain.length) {
           thinkingIndexRef.current += 1;
           setDisplayedThinking(thinkingChain.substring(0, thinkingIndexRef.current));
@@ -76,7 +76,7 @@ export default function ThinkingDisplay({ thinkingChain, answer, isStreaming = f
     }
 
     const interval = 20; // 每个字符间隔20ms
-    answerTimerRef.current = window.setInterval(() => {
+    answerTimerRef.current = setInterval(() => {
       if (answerIndexRef.current < answer.length) {
         answerIndexRef.current += 1;
         setDisplayedAnswer(answer.substring(0, answerIndexRef.current));

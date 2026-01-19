@@ -77,7 +77,7 @@ export default function SettingsPanel() {
     checkAndSyncPrompt();
 
     // 每 2 秒检查一次文件是否有更新
-    syncInterval = window.setInterval(checkAndSyncPrompt, 2000);
+    syncInterval = setInterval(checkAndSyncPrompt, 2000);
 
     return () => {
       if (syncInterval !== null) {

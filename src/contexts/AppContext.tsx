@@ -277,7 +277,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Apply theme to document
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', state.theme === 'dark');
+    // 确保 DOM 已加载
+    if (typeof document !== 'undefined' && document.documentElement) {
+      const htmlElement = document.documentElement;
+      if (state.theme === 'dark') {
+        htmlElement.classList.add('dark');
+      } else {
+        htmlElement.classList.remove('dark');
+      }
+    }
   }, [state.theme]);
 
   return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>;
