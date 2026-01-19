@@ -20,16 +20,19 @@ export const saveState = (state: Partial<AppState>): void => {
     return;
   }
   
+  let serialized: string;
   try {
-    const serialized = JSON.stringify(state);
+    serialized = JSON.stringify(state);
     localStorage.setItem(STORAGE_KEY, serialized);
   } catch (error) {
     // 处理存储空间不足等错误
     if (error instanceof DOMException && error.code === 22) {
       console.error('localStorage quota exceeded, clearing old data');
       try {
-        // 尝试清理一些旧数据
+        // 尝试清理一些旧数据后重新保存
         localStorage.removeItem(STORAGE_KEY);
+        // 重新序列化（因为之前的 serialized 可能没有成功创建）
+        serialized = JSON.stringify(state);
         localStorage.setItem(STORAGE_KEY, serialized);
       } catch (retryError) {
         console.error('Failed to save state to localStorage after retry:', retryError);
