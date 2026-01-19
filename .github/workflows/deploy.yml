@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - Account-system-and-payment-system
+      - (V2.0.0)Account-system-and-payment-system
   workflow_dispatch:
 
 permissions:
