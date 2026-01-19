@@ -464,13 +464,17 @@ export default function MessageList() {
     }
   };
 
+  // 空白对话框状态：显示欢迎信息，但允许用户输入
   if (!currentConversation) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
-        <div className="text-center">
-          <p className="text-lg mb-2">选择一个会话开始对话</p>
-          <p className="text-sm">或创建一个新会话</p>
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center text-gray-500 dark:text-gray-400 max-w-md">
+            <p className="text-lg sm:text-xl mb-2">开始新的对话</p>
+            <p className="text-sm sm:text-base">在下方输入框中输入内容即可开始</p>
+          </div>
         </div>
+        <div ref={messagesEndRef} />
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { Message } from '../types';
+import { Message, Conversation } from '../types';
 import { callModelAPI } from '../utils/apiService';
 import { generateTitle } from '../utils/titleGenerator';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
@@ -12,9 +12,9 @@ export default function MessageInput() {
   const [isLoading, setIsLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const currentConversation = state.conversations.find(
-    c => c.id === state.currentConversationId
-  );
+  const currentConversation = state.currentConversationId
+    ? state.conversations.find(c => c.id === state.currentConversationId)
+    : null;
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -39,8 +39,22 @@ export default function MessageInput() {
 
   const handleSend = async () => {
     const currentApiKey = getCurrentApiKey();
-    if (!input.trim() || !currentConversation || !currentApiKey || isLoading) {
+    if (!input.trim() || !currentApiKey || isLoading) {
       return;
+    }
+
+    // 如果当前没有会话（空白对话框），创建新会话
+    let conversationToUse = currentConversation;
+    if (!conversationToUse) {
+      const newConversation: Conversation = {
+        id: `conv-${Date.now()}`,
+        name: `会话 ${state.conversations.length + 1}`,
+        messages: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      dispatch({ type: 'ADD_CONVERSATION', payload: newConversation });
+      conversationToUse = newConversation;
     }
 
     const userMessage: Message = {
@@ -52,7 +66,7 @@ export default function MessageInput() {
 
     dispatch({
       type: 'ADD_MESSAGE',
-      payload: { conversationId: currentConversation.id, message: userMessage },
+      payload: { conversationId: conversationToUse.id, message: userMessage },
     });
 
     setInput('');
@@ -73,7 +87,7 @@ export default function MessageInput() {
       }
 
       // Add conversation history (excluding system messages as they're already handled)
-      messages.push(...currentConversation.messages.filter(m => m.role !== 'system'));
+      messages.push(...conversationToUse.messages.filter(m => m.role !== 'system'));
 
       // Add new user message (no template processing)
       messages.push(userMessage);
@@ -89,18 +103,18 @@ export default function MessageInput() {
 
       dispatch({
         type: 'ADD_MESSAGE',
-        payload: { conversationId: currentConversation.id, message: assistantMessage },
+        payload: { conversationId: conversationToUse.id, message: assistantMessage },
       });
 
       // 记录发送前的消息数量，用于判断是否是第一轮对话
-      const messagesBeforeSend = currentConversation.messages.filter(m => m.role !== 'system');
+      const messagesBeforeSend = conversationToUse.messages.filter(m => m.role !== 'system');
       const isFirstRound = messagesBeforeSend.length === 0;
 
       // 标记消息为流式状态
       dispatch({
         type: 'SET_MESSAGE_STREAMING',
         payload: {
-          conversationId: currentConversation.id,
+          conversationId: conversationToUse.id,
           messageId: assistantMessageId,
           isStreaming: true,
         },
@@ -113,7 +127,7 @@ export default function MessageInput() {
       dispatch({
         type: 'UPDATE_MESSAGE',
         payload: {
-          conversationId: currentConversation.id,
+          conversationId: conversationToUse.id,
           messageId: assistantMessageId,
           content: responseContent,
         },
@@ -126,7 +140,7 @@ export default function MessageInput() {
         dispatch({
           type: 'SET_MESSAGE_STREAMING',
           payload: {
-            conversationId: currentConversation.id,
+            conversationId: conversationToUse.id,
             messageId: assistantMessageId,
             isStreaming: false,
           },
@@ -135,13 +149,13 @@ export default function MessageInput() {
 
       // 检测第一轮对话完成并自动生成标题
       // 第一轮对话：发送前没有消息（不包括system消息），且未手动重命名
-      if (isFirstRound && !currentConversation.isManuallyRenamed) {
+      if (isFirstRound && !conversationToUse.isManuallyRenamed) {
         const autoTitle = generateTitle(userMessage.content, assistantMessage.content);
         
         dispatch({
           type: 'UPDATE_CONVERSATION_TITLE',
           payload: {
-            conversationId: currentConversation.id,
+            conversationId: conversationToUse.id,
             title: autoTitle,
           },
         });
@@ -155,7 +169,7 @@ export default function MessageInput() {
       dispatch({
         type: 'UPDATE_MESSAGE',
         payload: {
-          conversationId: currentConversation.id,
+          conversationId: conversationToUse.id,
           messageId: assistantMessageId,
           content: `错误: ${errorMessage}`,
         },
@@ -182,13 +196,7 @@ export default function MessageInput() {
     }
   };
 
-  if (!currentConversation) {
-    return (
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400">
-        请先选择一个会话或创建新会话
-      </div>
-    );
-  }
+  // 移除这个检查，允许在空白对话框状态下显示输入框
 
   const currentApiKey = getCurrentApiKey();
   if (!currentApiKey) {
@@ -216,7 +224,7 @@ export default function MessageInput() {
         </div>
         <button
           onClick={handleClear}
-          disabled={isLoading || currentConversation.messages.length === 0}
+          disabled={isLoading || !currentConversation || currentConversation.messages.length === 0}
           className="p-2 sm:p-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           title="清空对话"
         >

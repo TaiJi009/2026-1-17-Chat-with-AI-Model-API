@@ -234,6 +234,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         ...loadedState,
+        // 每次加载状态后，重置为空白对话框（不显示之前的会话）
+        currentConversationId: null,
       };
 
     default:
