@@ -73,7 +73,7 @@ export class AuthController {
         });
       }
 
-      res.json({
+      return res.json({
         success: true,
         data: {
           id: user.id,
@@ -84,7 +84,7 @@ export class AuthController {
         },
       });
     } catch (error: any) {
-      next(error);
+      return next(error);
     }
   };
 
@@ -101,12 +101,12 @@ export class AuthController {
       }
 
       const token = await AuthService.refreshToken(req.user.userId);
-      res.json({
+      return res.json({
         success: true,
         data: { token },
       });
     } catch (error: any) {
-      next(error);
+      return next(error);
     }
   };
 }

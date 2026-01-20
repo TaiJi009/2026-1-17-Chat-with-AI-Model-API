@@ -7,7 +7,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 # 安装所有依赖（包括devDependencies，用于构建）
-RUN npm ci
+RUN npm install
 
 # 复制源代码
 COPY src ./src
@@ -25,7 +25,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 只安装生产依赖
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # 安装wget用于健康检查（需要在root用户下安装）
 RUN apk add --no-cache wget

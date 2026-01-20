@@ -1,7 +1,6 @@
 import { OrderModel, Order } from '../models/order.model';
 import { UserModel } from '../models/user.model';
 import wechatPayConfig from '../config/wechat-pay';
-import { v4 as uuidv4 } from 'uuid';
 
 // 注意：这里使用简化的微信支付实现
 // 实际生产环境需要使用 wechatpay-node-v3 或类似库
@@ -54,10 +53,11 @@ export class PaymentService {
    */
   private static async generateWechatQRCode(
     orderId: string,
-    amount: number
+    _amount: number
   ): Promise<string> {
     // 实际实现应该调用微信支付统一下单API
     // 这里返回一个占位符，实际开发时需要替换为真实的API调用
+    // _amount 参数保留以备将来使用
     
     if (wechatPayConfig.sandbox) {
       // 沙箱环境：返回测试二维码
@@ -144,8 +144,10 @@ export class PaymentService {
   /**
    * 验证微信支付回调签名
    * 注意：实际实现需要根据微信支付文档验证签名
+   * 目前未使用，但保留以备将来实现
    */
-  private static verifyWechatSignature(data: any): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private static verifyWechatSignature(_data: any): boolean {
     // 实现签名验证逻辑
     // 需要使用微信支付提供的签名算法
     return true; // 占位符

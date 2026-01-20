@@ -26,6 +26,13 @@ docker-compose logs -f
 docker-compose down
 ```
 
+### 使用 Docker Desktop GUI
+
+如果你更喜欢使用 Docker Desktop 的图形界面来运行 PostgreSQL 容器，请参考：
+
+- [Docker Desktop PostgreSQL 快速参考](../../docs/Docker%20Desktop%20PostgreSQL%20快速参考.md) - 快速配置清单
+- [Docker Desktop PostgreSQL 配置指南](../../docs/Docker%20Desktop%20PostgreSQL%20配置指南.md) - 详细配置说明
+
 ## 配置说明
 
 ### 环境变量
