@@ -45,7 +45,7 @@ npm run dev
 
 后端服务器运行在 `http://localhost:3000`
 
-### Docker 部署（推荐）
+### Docker 部署（本地开发）
 
 ```bash
 cd backend/docker
@@ -53,6 +53,15 @@ docker-compose up -d
 ```
 
 详细部署说明请参考：[Docker 部署快速指南](docs/Docker部署快速指南.md)
+
+### Railway 部署（生产环境推荐）
+
+Railway提供免费的Docker托管服务，自动HTTPS和域名。
+
+**详细步骤**：[Railway部署指南](docs/Railway部署指南.md)  
+**检查清单**：[Railway部署检查清单](docs/Railway部署检查清单.md)
+
+⚠️ **注意**：Railway不支持直接部署docker-compose.yml，需要分别部署PostgreSQL和后端服务。
 
 ## 配置说明
 

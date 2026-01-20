@@ -158,17 +158,26 @@ docker-compose up -d --build
 
 #### Railway
 
+⚠️ **重要**：Railway不支持直接部署docker-compose.yml，需要分别部署PostgreSQL和后端服务。
+
+**详细步骤请参考**：[Railway部署指南](./Railway部署指南.md)
+
+**快速步骤**：
 1. 访问 [Railway](https://railway.app)
 2. 创建新项目，连接GitHub仓库
-3. 选择 `backend/docker/docker-compose.yml`
-4. 配置环境变量
-5. 部署完成，获取HTTPS域名
+3. 创建PostgreSQL数据库服务
+4. 创建后端Web服务（Root Directory: `backend`）
+5. 配置环境变量（参考Railway部署指南）
+6. 运行数据库迁移
+7. 生成服务域名
 
 **优点:**
 - 自动HTTPS
 - 自动域名
 - 简单易用
-- 免费额度
+- 免费额度（$5/月或500小时）
+
+**检查清单**：[Railway部署检查清单](./Railway部署检查清单.md)
 
 #### Render
 

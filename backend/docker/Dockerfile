@@ -42,9 +42,11 @@ RUN addgroup -g 1001 -S nodejs && \
 RUN chown -R nodejs:nodejs /app
 
 # 暴露端口
+# 注意：Railway会自动设置PORT环境变量，应用会读取process.env.PORT
 EXPOSE 3000
 
-# 健康检查（使用wget，需要在root用户下运行）
+# 健康检查
+# 注意：Railway会自动处理健康检查，使用/health端点
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:3000/health || exit 1
 
