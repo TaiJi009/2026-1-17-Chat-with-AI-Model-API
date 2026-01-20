@@ -103,11 +103,57 @@ TENCENT_SMS_SECRET_KEY=your-secret-key
 
 ## 部署
 
-### 前端部署
+### 前端部署（GitHub Pages + GitHub Actions）
+
+#### 快速部署步骤
 
 1. 将代码推送到 GitHub 仓库
-2. 在仓库设置中启用 GitHub Pages
-3. GitHub Actions 会自动构建和部署
+2. 在仓库 **Settings → Pages** 中：
+   - 将 **Source** 选择为 **GitHub Actions**
+   - GitHub 会自动使用 `.github/workflows/deploy.yml` 工作流进行部署
+3. 推送到配置的分支后，GitHub Actions 会自动构建和部署
+
+#### 如何查看部署分支
+
+当使用 **GitHub Actions** 作为部署源时，部署分支由工作流文件配置决定。查看方法：
+
+**方法 1：查看工作流文件**
+- 打开 `.github/workflows/deploy.yml` 文件
+- 查看 `on.push.branches` 配置（通常在文件开头）
+- 当前配置的分支：`(V2.0.0)Account-system-and-payment-system`
+
+**方法 2：在 GitHub Actions 页面查看**
+- 进入仓库的 **Actions** 页面
+- 点击 **"Deploy to GitHub Pages"** 工作流
+- 查看工作流运行记录，可以看到触发分支信息
+
+**方法 3：在 GitHub Pages 设置页面**
+- 进入 **Settings → Pages**
+- 选择 **GitHub Actions** 作为部署源后，页面会显示当前使用的工作流名称
+
+#### 如何修改部署分支
+
+如果需要更改部署分支：
+
+1. 编辑 `.github/workflows/deploy.yml` 文件
+2. 修改 `on.push.branches` 下的分支名称
+3. 保存并推送到仓库
+4. 后续推送到新配置的分支时会自动触发部署
+
+**示例：**
+```yaml
+on:
+  push:
+    branches:
+      - main  # 修改为您想要的分支名称
+```
+
+#### 手动触发部署
+
+除了自动触发外，也可以手动触发部署：
+- 进入 **Actions** 页面
+- 选择 **"Deploy to GitHub Pages"** 工作流
+- 点击 **"Run workflow"** 按钮
 
 ### 后端部署
 
@@ -126,6 +172,7 @@ docker-compose up -d
 - [技术架构](docs/账号功能与付费功能/02-技术架构.md) - 系统架构和数据流向
 - [系统流程](docs/账号功能与付费功能/03-系统流程.md) - 登录、支付和权限控制流程
 - [API 接口文档](docs/账号功能与付费功能/05-API接口文档.md) - 认证和支付接口说明
+- [GitHub Actions 部署指南](docs/GitHub%20Actions%20部署指南.md) - GitHub Pages 前端部署详细说明
 - [Docker 部署快速指南](docs/Docker部署快速指南.md) - Docker 部署详细说明
 - [N8N Webhook 集成指南](docs/N8N%20Webhook%20集成指南.md) - N8N 工作流配置说明
 - [提示词工程](prompt-engineering/README.md) - 提示词工程文档

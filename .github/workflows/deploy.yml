@@ -1,9 +1,19 @@
 name: Deploy to GitHub Pages
 
+# 工作流触发配置
+# 当使用 GitHub Actions 作为 GitHub Pages 部署源时，GitHub 会监听此配置的分支
+# 如何查看部署分支：
+#   1. 查看此文件中的 branches 配置（下方第 6 行）
+#   2. 在 GitHub Actions 页面查看工作流运行记录中的触发分支信息
+#   3. 在 GitHub Pages 设置页面查看当前使用的工作流名称
+# 如何修改部署分支：修改下方 branches 列表中的分支名称即可
 on:
   push:
     branches:
+      # 部署分支：当此分支有推送时，自动触发构建和部署
+      # 当前配置的分支： (V2.0.0)Account-system-and-payment-system
       - (V2.0.0)Account-system-and-payment-system
+  # 手动触发：可以在 GitHub Actions 页面手动运行此工作流
   workflow_dispatch:
 
 permissions:
