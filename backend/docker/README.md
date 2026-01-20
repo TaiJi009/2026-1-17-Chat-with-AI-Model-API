@@ -210,14 +210,6 @@ docker-compose exec backend npm run migrate
 
 ## Docker托管平台部署
 
-### Railway
-
-1. 在Railway创建新项目
-2. 连接GitHub仓库
-3. 选择 `backend/docker/docker-compose.yml`
-4. 配置环境变量
-5. 部署后获取HTTPS域名
-
 ### Render
 
 1. 创建新的Web Service

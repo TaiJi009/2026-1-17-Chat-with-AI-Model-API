@@ -292,7 +292,6 @@ on:
 
 - [README.md](../README.md) - 项目主文档
 - [Docker 部署快速指南](./Docker部署快速指南.md) - 后端部署指南
-- [Railway 部署指南](./Railway部署指南.md) - Railway 平台部署指南
 
 ## 技术支持
 

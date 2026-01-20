@@ -74,13 +74,6 @@ docker-compose down -v  # 会删除所有数据卷
 
 ### Docker托管平台部署
 
-#### Railway部署
-1. 在Railway创建新项目
-2. 连接GitHub仓库
-3. 配置环境变量（从.env.example复制）
-4. Railway自动检测docker-compose.yml并部署
-5. 获取自动分配的HTTPS域名
-
 #### Render部署
 1. 创建新的Web Service
 2. 连接GitHub仓库
