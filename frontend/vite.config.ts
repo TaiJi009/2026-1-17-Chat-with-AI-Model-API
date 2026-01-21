@@ -11,7 +11,7 @@ function copyPromptFile() {
   return {
     name: 'copy-prompt-file',
     buildStart() {
-      const sourceFile = join(__dirname, '系统默认提示词工程.md')
+      const sourceFile = join(__dirname, '..', '系统默认提示词工程.md')
       const targetDir = join(__dirname, 'public')
       const targetFile = join(targetDir, '系统默认提示词工程.md')
       
@@ -29,7 +29,7 @@ function copyPromptFile() {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         if (req.url?.includes('/系统默认提示词工程.md') || req.url?.includes(encodeURIComponent('系统默认提示词工程.md'))) {
-          const sourceFile = join(__dirname, '系统默认提示词工程.md')
+          const sourceFile = join(__dirname, '..', '系统默认提示词工程.md')
           const targetDir = join(__dirname, 'public')
           const targetFile = join(targetDir, '系统默认提示词工程.md')
           
