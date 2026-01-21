@@ -1,16 +1,27 @@
-import tencentcloud from 'tencentcloud-sdk-nodejs';
+import * as tencentcloud from 'tencentcloud-sdk-nodejs';
 import smsConfig from '../config/sms';
 import pool from '../config/database';
 
-const SmsClient = tencentcloud.sms.v20210111.Client;
-
-const client = new SmsClient({
-  credential: {
-    secretId: smsConfig.secretId,
-    secretKey: smsConfig.secretKey,
-  },
-  region: smsConfig.region,
-});
+// 延迟获取客户端
+function getSmsClient() {
+  if (!smsConfig.secretId || !smsConfig.secretKey || !smsConfig.appId) {
+    return null;
+  }
+  
+  try {
+    const SmsClient = tencentcloud.sms.v20210111.Client;
+    return new SmsClient({
+      credential: {
+        secretId: smsConfig.secretId,
+        secretKey: smsConfig.secretKey,
+      },
+      region: smsConfig.region,
+    });
+  } catch (error) {
+    console.error('初始化短信客户端失败:', error);
+    return null;
+  }
+}
 
 // 生成6位随机验证码
 function generateCode(): string {
@@ -48,7 +59,8 @@ export class SmsService {
     );
 
     // 如果配置了短信服务，发送短信
-    if (smsConfig.secretId && smsConfig.appId) {
+    const client = getSmsClient();
+    if (client) {
       try {
         await client.SendSms({
           PhoneNumberSet: [phone],
