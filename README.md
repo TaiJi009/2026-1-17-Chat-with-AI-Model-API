@@ -18,7 +18,7 @@
 
 **前端**：React 18 + TypeScript + Vite + Tailwind CSS  
 **后端**：Node.js + Express + TypeScript + PostgreSQL  
-**部署**：GitHub Pages（前端）+ Docker（后端）  
+**部署**：GitHub Pages（前端）+ Railway（后端和数据库）  
 **认证**：JWT Token  
 **支付**：微信支付 Native 支付  
 **短信**：腾讯云短信服务
@@ -46,14 +46,11 @@ npm run dev
 
 后端服务器运行在 `http://localhost:3000`
 
-### Docker 部署（本地开发）
+### Railway 部署（生产环境）
 
-```bash
-cd backend/docker
-docker-compose up -d
-```
+后端和数据库部署到 Railway，支持 GitHub 集成自动部署。
 
-详细部署说明请参考：[Docker 部署快速指南](docs/Docker部署快速指南.md)
+详细部署说明请参考：[Railway 部署指南](docs/Railway部署指南.md) 和 [后端 README](backend/README.md)
 
 ## 配置说明
 
@@ -147,16 +144,27 @@ on:
 - 选择 **"Deploy to GitHub Pages"** 工作流
 - 点击 **"Run workflow"** 按钮
 
-### 后端部署
+### 后端部署（Railway）
 
-使用 Docker Compose 一键部署：
+#### 快速部署步骤
 
-```bash
-cd backend/docker
-docker-compose up -d
-```
+1. 在 [Railway](https://railway.app) 创建账号
+2. 创建新项目，连接GitHub仓库
+3. 添加 PostgreSQL 服务（自动提供数据库）
+4. 添加 Web Service，选择 `backend` 目录
+5. 配置环境变量（见后端 README）
+6. 部署完成后，运行数据库迁移
 
-或使用 Docker 托管平台（Render、Fly.io 等），详细说明请参考：[Docker 部署快速指南](docs/Docker部署快速指南.md)
+#### Railway 优势
+
+- ✅ 自动SSL证书和HTTPS
+- ✅ 免费PostgreSQL数据库
+- ✅ 自动部署（GitHub集成）
+- ✅ 简单的环境变量管理
+- ✅ 实时日志查看
+- ✅ 支持自定义域名
+
+详细说明请参考：[Railway 部署指南](docs/Railway部署指南.md) 和 [后端 README](backend/README.md)
 
 ## 文档
 
@@ -165,8 +173,9 @@ docker-compose up -d
 - [系统流程](docs/账号功能与付费功能/03-系统流程.md) - 登录、支付和权限控制流程
 - [API 接口文档](docs/账号功能与付费功能/05-API接口文档.md) - 认证和支付接口说明
 - [GitHub Actions 部署指南](docs/GitHub%20Actions%20部署指南.md) - GitHub Pages 前端部署详细说明
-- [Docker 部署快速指南](docs/Docker部署快速指南.md) - Docker 部署详细说明
+- [Railway 部署指南](docs/Railway部署指南.md) - Railway 后端和数据库部署详细说明
 - [N8N Webhook 集成指南](docs/N8N%20Webhook%20集成指南.md) - N8N 工作流配置说明
+- [Docker 部署快速指南](docs/Docker部署快速指南.md) - Docker 部署文档（历史参考）
 - [提示词工程](prompt-engineering/README.md) - 提示词工程文档
 
 ## 贡献
