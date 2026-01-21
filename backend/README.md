@@ -164,7 +164,7 @@ railway variables
 - ✅ 实时日志查看
 - ✅ 支持自定义域名
 
-详细部署说明请参考：[Railway 部署指南](../docs/Railway部署指南.md)
+详细部署说明请参考：[Railway 部署指南](../docs/Railway部署指南/README.md)
 
 ### 生产环境注意事项
 

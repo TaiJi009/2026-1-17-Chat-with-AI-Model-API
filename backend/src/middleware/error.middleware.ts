@@ -8,7 +8,7 @@ export function errorHandler(
   err: AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) {
   const statusCode = err.statusCode || 500;
   const message = err.message || '服务器内部错误';
@@ -27,7 +27,7 @@ export function errorHandler(
   });
 }
 
-export function notFoundHandler(req: Request, res: Response) {
+export function notFoundHandler(_req: Request, res: Response) {
   res.status(404).json({
     success: false,
     message: '接口不存在',

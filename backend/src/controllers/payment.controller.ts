@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { PaymentService } from '../services/payment.service';
-import { body, param, validationResult } from 'express-validator';
+import { param, validationResult } from 'express-validator';
 
 export class PaymentController {
   /**
@@ -28,7 +28,7 @@ export class PaymentController {
         data: order,
       });
     } catch (error: any) {
-      next(error);
+      return next(error);
     }
   };
 
@@ -85,7 +85,7 @@ export class PaymentController {
           },
         });
       } catch (error: any) {
-        next(error);
+        return next(error);
       }
     },
   ];
@@ -96,7 +96,7 @@ export class PaymentController {
   static wechatCallback = async (
     req: Request,
     res: Response,
-    next: NextFunction
+    _next: NextFunction
   ) => {
     try {
       await PaymentService.handleWechatCallback(req.body);
@@ -136,7 +136,7 @@ export class PaymentController {
         data: status,
       });
     } catch (error: any) {
-      next(error);
+      return next(error);
     }
   };
 }

@@ -50,7 +50,7 @@ npm run dev
 
 后端和数据库部署到 Railway，支持 GitHub 集成自动部署。
 
-详细部署说明请参考：[Railway 部署指南](docs/Railway部署指南.md) 和 [后端 README](backend/README.md)
+详细部署说明请参考：[Railway 部署指南](docs/Railway部署指南/README.md) 和 [后端 README](backend/README.md)
 
 ## 配置说明
 
@@ -164,7 +164,7 @@ on:
 - ✅ 实时日志查看
 - ✅ 支持自定义域名
 
-详细说明请参考：[Railway 部署指南](docs/Railway部署指南.md) 和 [后端 README](backend/README.md)
+详细说明请参考：[Railway 部署指南](docs/Railway部署指南/README.md) 和 [后端 README](backend/README.md)
 
 ## 文档
 
@@ -173,7 +173,7 @@ on:
 - [系统流程](docs/账号功能与付费功能/03-系统流程.md) - 登录、支付和权限控制流程
 - [API 接口文档](docs/账号功能与付费功能/05-API接口文档.md) - 认证和支付接口说明
 - [GitHub Actions 部署指南](docs/GitHub%20Actions%20部署指南.md) - GitHub Pages 前端部署详细说明
-- [Railway 部署指南](docs/Railway部署指南.md) - Railway 后端和数据库部署详细说明
+- [Railway 部署指南](docs/Railway部署指南/README.md) - Railway 后端和数据库部署详细说明
 - [N8N Webhook 集成指南](docs/N8N%20Webhook%20集成指南.md) - N8N 工作流配置说明
 - [Docker 部署快速指南](docs/Docker部署快速指南.md) - Docker 部署文档（历史参考）
 - [提示词工程](prompt-engineering/README.md) - 提示词工程文档

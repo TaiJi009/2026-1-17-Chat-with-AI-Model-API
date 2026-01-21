@@ -147,6 +147,7 @@ export class PaymentService {
    * 目前未使用，但保留以备将来实现
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // @ts-ignore - 保留以备将来使用
   private static verifyWechatSignature(_data: any): boolean {
     // 实现签名验证逻辑
     // 需要使用微信支付提供的签名算法

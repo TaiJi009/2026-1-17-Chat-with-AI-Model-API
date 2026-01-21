@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { query } from '../config/database';
+import pool from '../config/database';
 
 async function runMigrations() {
   try {
@@ -10,7 +10,7 @@ async function runMigrations() {
     const sql = fs.readFileSync(migrationFile, 'utf-8');
 
     // 执行SQL
-    await query(sql);
+    await pool.query(sql);
 
     console.log('数据库迁移完成！');
     process.exit(0);
