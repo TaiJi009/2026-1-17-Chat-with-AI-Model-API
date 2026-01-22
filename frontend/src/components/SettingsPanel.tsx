@@ -21,11 +21,11 @@ const RECHARGE_LINKS: Partial<Record<ApiProvider, string>> = {
   doubao: 'https://console.volcengine.com/ark/overview',
 };
 
-type SettingsTab = 'prompt' | 'api' | 'n8n';
+type SettingsTab = 'api' | 'n8n';
 
 export default function SettingsPanel() {
   const { state, dispatch } = useApp();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('prompt');
+  const [activeTab, setActiveTab] = useState<SettingsTab>('api');
   
   // 提示词相关状态
   const [systemPrompt, setSystemPrompt] = useState(state.promptConfig.systemPrompt);
@@ -225,12 +225,15 @@ export default function SettingsPanel() {
       alert('请先配置N8N URL后再启用N8N模式');
       return;
     }
-    if (newUseN8N && !confirm('切换到N8N模式后，提示词工程和API配置将被禁用。确定要继续吗？')) {
+    if (newUseN8N && !confirm('切换到N8N模式后，API配置和提示词配置将被禁用。确定要继续吗？')) {
       return;
     }
     dispatch({ type: 'SET_USE_N8N', payload: newUseN8N });
     if (newUseN8N) {
       setActiveTab('n8n');
+    } else {
+      // 切换回传统模式时，切换到API配置标签页
+      setActiveTab('api');
     }
   };
 
@@ -275,21 +278,6 @@ export default function SettingsPanel() {
           {/* 标签页切换 */}
           <div className="flex gap-2">
             <button
-              onClick={() => !state.useN8N && setActiveTab('prompt')}
-              disabled={state.useN8N}
-              className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'prompt'
-                  ? 'bg-blue-600 text-white'
-                  : state.useN8N
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                  : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
-              }`}
-              title={state.useN8N ? 'N8N模式下已禁用' : '提示词工程'}
-            >
-              <FiFileText className="w-4 h-4 inline mr-1" />
-              提示词工程
-            </button>
-            <button
               onClick={() => !state.useN8N && setActiveTab('api')}
               disabled={state.useN8N}
               className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -320,7 +308,155 @@ export default function SettingsPanel() {
 
         {/* 内容区域 */}
         <div className="flex-1 overflow-y-auto">
-          {activeTab === 'n8n' ? (
+          {activeTab === 'api' ? (
+            <div className="p-4 space-y-4">
+              {/* N8N模式下的提示信息 */}
+              {state.useN8N && (
+                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                    <strong>提示：</strong> 当前使用N8N模式，API配置和提示词配置已禁用。
+                  </p>
+                </div>
+              )}
+
+              {/* API配置区域 */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                  API配置
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      模型提供商
+                    </label>
+                    <div className="flex gap-2">
+                      <select
+                        value={provider}
+                        onChange={(e) => handleProviderChange(e.target.value as ApiProvider)}
+                        disabled={state.useN8N}
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {providers.map((p) => (
+                          <option key={p} value={p}>
+                            {getProviderDisplayName(p)}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={handleRecharge}
+                        disabled={state.useN8N}
+                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="前往充值"
+                      >
+                        <FiCreditCard className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={handleResetApi}
+                        disabled={state.useN8N}
+                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="重置API Key"
+                      >
+                        <FiRefreshCw className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      选择要使用的大模型提供商，点击充值图标前往充值页面，点击重置图标恢复默认设置
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <FiLock className="w-4 h-4 inline mr-1" />
+                      API Key
+                    </label>
+                    <input
+                      type="password"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder="请输入API Key..."
+                      disabled={state.useN8N}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      API Key以密码形式保护，仅存储在本地浏览器中，不会上传到服务器。请在安全的设备上使用。
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleSaveApi}
+                    disabled={state.useN8N}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FiSave className="w-4 h-4" />
+                    保存API配置
+                  </button>
+
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-xs text-blue-800 dark:text-blue-200">
+                      <strong>提示：</strong>
+                    </p>
+                    <ul className="mt-1 text-xs text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
+                      <li>智谱GLM：默认模型，未保存时自动使用默认API Key</li>
+                      <li>其他模型：请前往各提供商官网获取API Key</li>
+                      <li>每个模型的API Key会分别保存，切换模型时自动加载</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* 分隔线 */}
+              <div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+
+              {/* 提示词配置区域 */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                  <FiFileText className="w-4 h-4 inline mr-1" />
+                  提示词工程
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      系统提示词 (System Prompt)
+                    </label>
+                    <textarea
+                      value={systemPrompt}
+                      onChange={(e) => setSystemPrompt(e.target.value)}
+                      placeholder="定义AI的角色和行为..."
+                      rows={10}
+                      disabled={state.useN8N}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      用于定义AI的角色、行为和边界。系统提示词会在每次对话开始时发送给AI模型。
+                      <br />
+                      <span className="text-blue-600 dark:text-blue-400">
+                        💡 默认提示词来自 <code>系统默认提示词工程.md</code>，当该文件发生变更时，点击重置按钮可同步最新版本。
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSavePrompt}
+                      disabled={state.useN8N}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FiSave className="w-4 h-4" />
+                      保存提示词
+                    </button>
+                    <button
+                      onClick={handleResetPrompt}
+                      disabled={state.useN8N}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="重置为默认值"
+                    >
+                      <FiRefreshCw className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'n8n' ? (
             <div className="p-4 space-y-4">
               {/* N8N模式切换 */}
               <div>
@@ -349,8 +485,8 @@ export default function SettingsPanel() {
                 </button>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   {state.useN8N
-                    ? '当前使用N8N模式，提示词工程和API配置已禁用'
-                    : '启用后将禁用提示词工程和API配置，仅使用N8N链接进行对话'}
+                    ? '当前使用N8N模式，API配置和提示词配置已禁用'
+                    : '启用后将禁用API配置和提示词配置，仅使用N8N链接进行对话'}
                 </p>
               </div>
 
@@ -434,124 +570,9 @@ export default function SettingsPanel() {
                 </p>
                 <ul className="mt-1 text-xs text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
                   <li>N8N模式启用后，将使用N8N链接进行对话</li>
-                  <li>提示词工程和API配置在N8N模式下将被禁用</li>
+                  <li>API配置和提示词配置在N8N模式下将被禁用</li>
                   <li>系统提示词不会发送给N8N（N8N内部已配置）</li>
                   <li>请确保N8N URL可访问且配置正确</li>
-                </ul>
-              </div>
-            </div>
-          ) : activeTab === 'prompt' ? (
-            <div className="p-4 space-y-4">
-              {/* 提示词工程内容 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  系统提示词 (System Prompt)
-                </label>
-                <textarea
-                  value={systemPrompt}
-                  onChange={(e) => setSystemPrompt(e.target.value)}
-                  placeholder="定义AI的角色和行为..."
-                  rows={10}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono text-sm"
-                />
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  用于定义AI的角色、行为和边界。系统提示词会在每次对话开始时发送给AI模型。
-                  <br />
-                  <span className="text-blue-600 dark:text-blue-400">
-                    💡 默认提示词来自 <code>系统默认提示词工程.md</code>，当该文件发生变更时，点击重置按钮可同步最新版本。
-                  </span>
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSavePrompt}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
-                >
-                  <FiSave className="w-4 h-4" />
-                  保存
-                </button>
-                <button
-                  onClick={handleResetPrompt}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 flex items-center justify-center gap-2"
-                  title="重置为默认值"
-                >
-                  <FiRefreshCw className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="p-4 space-y-4">
-              {/* API配置内容 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  模型提供商
-                </label>
-                <div className="flex gap-2">
-                  <select
-                    value={provider}
-                    onChange={(e) => handleProviderChange(e.target.value as ApiProvider)}
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  >
-                    {providers.map((p) => (
-                      <option key={p} value={p}>
-                        {getProviderDisplayName(p)}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={handleRecharge}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
-                    title="前往充值"
-                  >
-                    <FiCreditCard className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={handleResetApi}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
-                    title="重置API Key"
-                  >
-                    <FiRefreshCw className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  选择要使用的大模型提供商，点击充值图标前往充值页面，点击重置图标恢复默认设置
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <FiLock className="w-4 h-4 inline mr-1" />
-                  API Key
-                </label>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="请输入API Key..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                />
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  API Key以密码形式保护，仅存储在本地浏览器中，不会上传到服务器。请在安全的设备上使用。
-                </p>
-              </div>
-
-              <button
-                onClick={handleSaveApi}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
-              >
-                <FiSave className="w-4 h-4" />
-                保存配置
-              </button>
-
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-xs text-blue-800 dark:text-blue-200">
-                  <strong>提示：</strong>
-                </p>
-                <ul className="mt-1 text-xs text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
-                  <li>智谱GLM：默认模型，未保存时自动使用默认API Key</li>
-                  <li>其他模型：请前往各提供商官网获取API Key</li>
-                  <li>每个模型的API Key会分别保存，切换模型时自动加载</li>
                 </ul>
               </div>
             </div>
