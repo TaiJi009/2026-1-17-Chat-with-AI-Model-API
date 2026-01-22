@@ -12,7 +12,9 @@ on:
     branches:
       # 部署分支：当此分支有推送时，自动触发构建和部署
       # 当前配置的分支： (V2.0.0)Account-system-and-payment-system
-      - (V2.0.0)Account-system-and-payment-system
+      # 支付与现金流分支：- (V2.0.0)Account-system-and-payment-system
+      # 基础功能：(V1.0.0)Basic-Functions-of-the-AI-Chat-Website
+      - (V1.0.0)Basic-Functions-of-the-AI-Chat-Website
   # 手动触发：可以在 GitHub Actions 页面手动运行此工作流
   workflow_dispatch:
 
