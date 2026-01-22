@@ -40,7 +40,7 @@ export default function MessageInput() {
 
   // 检查N8N配置是否有效
   const isN8NConfigValid = (): boolean => {
-    return state.useN8N && state.n8nConfig.url && state.n8nConfig.url.trim() !== '';
+    return !!(state.useN8N && state.n8nConfig.url && state.n8nConfig.url.trim() !== '');
   };
 
   const handleSend = async () => {
