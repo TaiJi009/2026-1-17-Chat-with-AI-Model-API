@@ -576,7 +576,7 @@ export default function SettingsPanel() {
                 </ul>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </>
