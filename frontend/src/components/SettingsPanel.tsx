@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { PromptConfig, ApiConfig } from '../types';
+import { PromptConfig, ApiConfig, N8NConfig } from '../types';
 import { getProviderDisplayName, ApiProvider } from '../utils/apiService';
 import { getDefaultSystemPrompt, getDefaultSystemPromptSync } from '../utils/defaultSystemPrompt';
-import { FiX, FiSave, FiRefreshCw, FiKey, FiLock, FiCreditCard, FiFileText } from 'react-icons/fi';
+import { FiX, FiSave, FiRefreshCw, FiKey, FiLock, FiCreditCard, FiFileText, FiLink, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
 
 // 默认API Key（仅在用户未保存时使用）
 const DEFAULT_API_KEYS: Partial<Record<ApiProvider, string>> = {
@@ -21,7 +21,7 @@ const RECHARGE_LINKS: Partial<Record<ApiProvider, string>> = {
   doubao: 'https://console.volcengine.com/ark/overview',
 };
 
-type SettingsTab = 'prompt' | 'api';
+type SettingsTab = 'prompt' | 'api' | 'n8n';
 
 export default function SettingsPanel() {
   const { state, dispatch } = useApp();
@@ -33,6 +33,12 @@ export default function SettingsPanel() {
   // API配置相关状态
   const [provider, setProvider] = useState<ApiProvider>(state.apiConfig.provider);
   const [apiKey, setApiKey] = useState('');
+
+  // N8N配置相关状态
+  const [n8nUrl, setN8nUrl] = useState(state.n8nConfig.url);
+  const [n8nUrlType, setN8nUrlType] = useState<'webhook' | 'http_request'>(state.n8nConfig.urlType);
+  const [n8nMethod, setN8nMethod] = useState<'POST' | 'GET'>(state.n8nConfig.method);
+  const [n8nApiKey, setN8nApiKey] = useState(state.n8nConfig.apiKey || '');
 
   // 同步提示词状态
   useEffect(() => {
@@ -107,6 +113,14 @@ export default function SettingsPanel() {
       setProvider(state.apiConfig.provider);
     }
   }, [state.apiConfig.provider]);
+
+  // 同步N8N配置状态
+  useEffect(() => {
+    setN8nUrl(state.n8nConfig.url);
+    setN8nUrlType(state.n8nConfig.urlType);
+    setN8nMethod(state.n8nConfig.method);
+    setN8nApiKey(state.n8nConfig.apiKey || '');
+  }, [state.n8nConfig]);
 
   // 保存提示词配置
   const handleSavePrompt = () => {
@@ -193,6 +207,33 @@ export default function SettingsPanel() {
 
   const providers: ApiProvider[] = ['zhipu', 'openai', 'claude', 'tongyi', 'wenxin', 'spark', 'doubao'];
 
+  // 保存N8N配置
+  const handleSaveN8N = () => {
+    const config: N8NConfig = {
+      url: n8nUrl.trim(),
+      urlType: n8nUrlType,
+      method: n8nMethod,
+      apiKey: n8nApiKey.trim() || undefined,
+    };
+    dispatch({ type: 'SET_N8N_CONFIG', payload: config });
+  };
+
+  // 切换N8N模式
+  const handleToggleN8N = () => {
+    const newUseN8N = !state.useN8N;
+    if (newUseN8N && !state.n8nConfig.url.trim()) {
+      alert('请先配置N8N URL后再启用N8N模式');
+      return;
+    }
+    if (newUseN8N && !confirm('切换到N8N模式后，提示词工程和API配置将被禁用。确定要继续吗？')) {
+      return;
+    }
+    dispatch({ type: 'SET_USE_N8N', payload: newUseN8N });
+    if (newUseN8N) {
+      setActiveTab('n8n');
+    }
+  };
+
   if (state.settingsPanelCollapsed) {
     return null;
   }
@@ -219,36 +260,187 @@ export default function SettingsPanel() {
             </button>
           </div>
 
+          {/* 当前模式显示 */}
+          <div className="mb-3 p-2 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-blue-800 dark:text-blue-200">
+                当前模式：
+              </span>
+              <span className="text-xs font-semibold text-blue-900 dark:text-blue-100">
+                {state.useN8N ? 'N8N' : '传统API'}
+              </span>
+            </div>
+          </div>
+
           {/* 标签页切换 */}
           <div className="flex gap-2">
             <button
-              onClick={() => setActiveTab('prompt')}
+              onClick={() => !state.useN8N && setActiveTab('prompt')}
+              disabled={state.useN8N}
               className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'prompt'
                   ? 'bg-blue-600 text-white'
+                  : state.useN8N
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
                   : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
               }`}
+              title={state.useN8N ? 'N8N模式下已禁用' : '提示词工程'}
             >
               <FiFileText className="w-4 h-4 inline mr-1" />
               提示词工程
             </button>
             <button
-              onClick={() => setActiveTab('api')}
+              onClick={() => !state.useN8N && setActiveTab('api')}
+              disabled={state.useN8N}
               className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'api'
+                  ? 'bg-blue-600 text-white'
+                  : state.useN8N
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                  : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
+              }`}
+              title={state.useN8N ? 'N8N模式下已禁用' : 'API配置'}
+            >
+              <FiKey className="w-4 h-4 inline mr-1" />
+              API配置
+            </button>
+            <button
+              onClick={() => setActiveTab('n8n')}
+              className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'n8n'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
               }`}
             >
-              <FiKey className="w-4 h-4 inline mr-1" />
-              API配置
+              <FiLink className="w-4 h-4 inline mr-1" />
+              N8N配置
             </button>
           </div>
         </div>
 
         {/* 内容区域 */}
         <div className="flex-1 overflow-y-auto">
-          {activeTab === 'prompt' ? (
+          {activeTab === 'n8n' ? (
+            <div className="p-4 space-y-4">
+              {/* N8N模式切换 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  启用N8N模式
+                </label>
+                <button
+                  onClick={handleToggleN8N}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                    state.useN8N
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {state.useN8N ? (
+                    <>
+                      <FiToggleRight className="w-5 h-5" />
+                      已启用
+                    </>
+                  ) : (
+                    <>
+                      <FiToggleLeft className="w-5 h-5" />
+                      未启用
+                    </>
+                  )}
+                </button>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {state.useN8N
+                    ? '当前使用N8N模式，提示词工程和API配置已禁用'
+                    : '启用后将禁用提示词工程和API配置，仅使用N8N链接进行对话'}
+                </p>
+              </div>
+
+              {/* N8N URL配置 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FiLink className="w-4 h-4 inline mr-1" />
+                  N8N URL
+                </label>
+                <input
+                  type="text"
+                  value={n8nUrl}
+                  onChange={(e) => setN8nUrl(e.target.value)}
+                  placeholder="https://your-n8n-instance.com/webhook/..."
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  输入N8N的webhook或HTTP Request URL
+                </p>
+              </div>
+
+              {/* URL类型选择 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  URL类型
+                </label>
+                <select
+                  value={n8nUrlType}
+                  onChange={(e) => setN8nUrlType(e.target.value as 'webhook' | 'http_request')}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value="webhook">Webhook</option>
+                  <option value="http_request">HTTP Request</option>
+                </select>
+              </div>
+
+              {/* HTTP方法选择 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  HTTP方法
+                </label>
+                <select
+                  value={n8nMethod}
+                  onChange={(e) => setN8nMethod(e.target.value as 'POST' | 'GET')}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value="POST">POST</option>
+                  <option value="GET">GET</option>
+                </select>
+              </div>
+
+              {/* API Key（可选） */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FiLock className="w-4 h-4 inline mr-1" />
+                  API Key（可选）
+                </label>
+                <input
+                  type="password"
+                  value={n8nApiKey}
+                  onChange={(e) => setN8nApiKey(e.target.value)}
+                  placeholder="如果需要认证，请输入API Key..."
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  如果N8N需要认证，请在此输入API Key或Token
+                </p>
+              </div>
+
+              <button
+                onClick={handleSaveN8N}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
+              >
+                <FiSave className="w-4 h-4" />
+                保存配置
+              </button>
+
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-xs text-blue-800 dark:text-blue-200">
+                  <strong>提示：</strong>
+                </p>
+                <ul className="mt-1 text-xs text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
+                  <li>N8N模式启用后，将使用N8N链接进行对话</li>
+                  <li>提示词工程和API配置在N8N模式下将被禁用</li>
+                  <li>系统提示词不会发送给N8N（N8N内部已配置）</li>
+                  <li>请确保N8N URL可访问且配置正确</li>
+                </ul>
+              </div>
+            </div>
+          ) : activeTab === 'prompt' ? (
             <div className="p-4 space-y-4">
               {/* 提示词工程内容 */}
               <div>

@@ -15,6 +15,13 @@ const initialState: AppState = {
   promptConfig: {
     systemPrompt: getDefaultSystemPromptSync(),
   },
+  n8nConfig: {
+    url: '',
+    urlType: 'webhook',
+    method: 'POST',
+    apiKey: '',
+  },
+  useN8N: false,
   theme: 'dark', // 默认夜间模式（免费功能）
   sidebarCollapsed: true, // 移动端默认折叠
   promptPanelCollapsed: true,
@@ -167,6 +174,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
         promptConfig: action.payload,
       };
 
+    case 'SET_N8N_CONFIG':
+      return {
+        ...state,
+        n8nConfig: action.payload,
+      };
+
+    case 'SET_USE_N8N':
+      return {
+        ...state,
+        useN8N: action.payload,
+      };
+
     case 'SET_THEME':
       return {
         ...state,
@@ -247,6 +266,21 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }
       }
       
+      // 确保N8N配置存在
+      if (!loadedState.n8nConfig) {
+        loadedState.n8nConfig = {
+          url: '',
+          urlType: 'webhook',
+          method: 'POST',
+          apiKey: '',
+        };
+      }
+      
+      // 确保useN8N字段存在
+      if (loadedState.useN8N === undefined) {
+        loadedState.useN8N = false;
+      }
+      
       return {
         ...state,
         ...loadedState,
@@ -287,6 +321,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       currentConversationId: state.currentConversationId,
       apiConfig: state.apiConfig,
       promptConfig: state.promptConfig,
+      n8nConfig: state.n8nConfig,
+      useN8N: state.useN8N,
       theme: state.theme,
       sidebarCollapsed: state.sidebarCollapsed,
       promptPanelCollapsed: state.promptPanelCollapsed,

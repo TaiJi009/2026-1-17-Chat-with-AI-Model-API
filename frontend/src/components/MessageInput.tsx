@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { Message, Conversation } from '../types';
 import { callModelAPI } from '../utils/apiService';
+import { callN8NWebhook } from '../utils/n8nService';
 import { generateTitle } from '../utils/titleGenerator';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
 
@@ -37,10 +38,30 @@ export default function MessageInput() {
     return '';
   };
 
+  // 检查N8N配置是否有效
+  const isN8NConfigValid = (): boolean => {
+    return state.useN8N && state.n8nConfig.url && state.n8nConfig.url.trim() !== '';
+  };
+
   const handleSend = async () => {
-    const currentApiKey = getCurrentApiKey();
-    if (!input.trim() || !currentApiKey || isLoading) {
+    // 检查输入和配置
+    if (!input.trim() || isLoading) {
       return;
+    }
+
+    // 检查N8N模式配置
+    if (state.useN8N) {
+      if (!isN8NConfigValid()) {
+        alert('请先在设置中配置N8N URL');
+        return;
+      }
+    } else {
+      // 传统API模式：检查API Key
+      const currentApiKey = getCurrentApiKey();
+      if (!currentApiKey) {
+        alert('请先在设置中配置API Key');
+        return;
+      }
     }
 
     // 如果当前没有会话（空白对话框），创建新会话
@@ -76,8 +97,9 @@ export default function MessageInput() {
       // Build messages array
       const messages: Message[] = [];
       
-      // Add system prompt if provided
-      if (state.promptConfig.systemPrompt.trim()) {
+      // 根据模式决定是否添加system prompt
+      if (!state.useN8N && state.promptConfig.systemPrompt.trim()) {
+        // 传统API模式：添加system prompt
         messages.push({
           id: `msg-system`,
           role: 'system',
@@ -120,8 +142,16 @@ export default function MessageInput() {
         },
       });
 
-      // Call model API
-      const responseContent = await callModelAPI(state.apiConfig, messages);
+      // Call API based on mode
+      let responseContent: string;
+      if (state.useN8N) {
+        // N8N模式：调用N8N webhook（不包含system消息）
+        const n8nMessages = messages.filter(m => m.role !== 'system');
+        responseContent = await callN8NWebhook(state.n8nConfig, n8nMessages);
+      } else {
+        // 传统API模式：调用传统API
+        responseContent = await callModelAPI(state.apiConfig, messages);
+      }
 
       // 先设置完整内容，但保持流式状态以便逐字显示
       dispatch({
@@ -196,13 +226,15 @@ export default function MessageInput() {
     }
   };
 
-  // 移除这个检查，允许在空白对话框状态下显示输入框
-
-  const currentApiKey = getCurrentApiKey();
-  if (!currentApiKey) {
+  // 检查配置是否有效
+  const isConfigValid = state.useN8N ? isN8NConfigValid() : !!getCurrentApiKey();
+  
+  if (!isConfigValid) {
     return (
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400">
-        请先在设置中配置API Key
+        {state.useN8N 
+          ? '请先在设置中配置N8N URL'
+          : '请先在设置中配置API Key'}
       </div>
     );
   }

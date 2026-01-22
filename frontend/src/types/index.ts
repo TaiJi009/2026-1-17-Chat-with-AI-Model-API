@@ -27,6 +27,14 @@ export interface ApiConfig {
   apiKeys: Partial<Record<'zhipu' | 'openai' | 'claude' | 'tongyi' | 'wenxin' | 'spark' | 'doubao', string>>; // 存储每个模型的API Key
 }
 
+export interface N8NConfig {
+  url: string; // N8N的webhook/HTTP Request URL
+  urlType: 'webhook' | 'http_request'; // URL类型
+  method: 'POST' | 'GET'; // HTTP方法，默认POST
+  apiKey?: string; // 可选的API Key/Token，用于认证
+  customHeaders?: Record<string, string>; // 可选的自定义请求头
+}
+
 // 用户相关类型
 export interface User {
   id: string;
@@ -51,6 +59,8 @@ export interface AppState {
   currentConversationId: string | null;
   apiConfig: ApiConfig;
   promptConfig: PromptConfig;
+  n8nConfig: N8NConfig; // N8N配置
+  useN8N: boolean; // 是否使用N8N模式
   theme: 'light' | 'dark';
   sidebarCollapsed: boolean;
   promptPanelCollapsed: boolean;
@@ -75,6 +85,8 @@ export type AppAction =
   | { type: 'TOGGLE_PIN_CONVERSATION'; payload: string }
   | { type: 'SET_API_CONFIG'; payload: ApiConfig }
   | { type: 'SET_PROMPT_CONFIG'; payload: PromptConfig }
+  | { type: 'SET_N8N_CONFIG'; payload: N8NConfig }
+  | { type: 'SET_USE_N8N'; payload: boolean }
   | { type: 'SET_THEME'; payload: 'light' | 'dark' }
   | { type: 'TOGGLE_SIDEBAR' }
   | { type: 'TOGGLE_PROMPT_PANEL' }
