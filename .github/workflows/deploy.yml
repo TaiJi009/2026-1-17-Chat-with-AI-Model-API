@@ -1,6 +1,6 @@
 name: Deploy to GitHub Pages
 
-# 工作流触发配置
+# 工作流触发配置 
 # 当使用 GitHub Actions 作为 GitHub Pages 部署源时，GitHub 会监听此配置的分支
 # 如何查看部署分支：
 #   1. 查看此文件中的 branches 配置（下方第 6 行）
