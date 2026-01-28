@@ -6,11 +6,11 @@ import { fileURLToPath } from 'url'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
-// 自定义插件：复制 prompt-engineering/Prompt-3.0.md 到 public 目录
+// 自定义插件：复制 prompt-engineering/Prompt-1.0.md 到 public 目录
 function copyPromptFile() {
-  const sourceFile = join(__dirname, '..', 'prompt-engineering', 'Prompt-3.0.md')
+  const sourceFile = join(__dirname, '..', 'prompt-engineering', 'Prompt-1.0.md')
   const targetDir = join(__dirname, 'public')
-  const targetFile = join(targetDir, 'Prompt-3.0.md')
+  const targetFile = join(targetDir, 'Prompt-1.0.md')
   
   // 复制文件的辅助函数
   const doCopy = () => {
@@ -19,10 +19,10 @@ function copyPromptFile() {
         mkdirSync(targetDir, { recursive: true })
       }
       copyFileSync(sourceFile, targetFile)
-      console.log('✓ Copied Prompt-3.0.md to public/')
+      console.log('✓ Copied Prompt-1.0.md to public/')
       return true
     } else {
-      console.warn('⚠ Prompt-3.0.md not found at:', sourceFile)
+      console.warn('⚠ Prompt-1.0.md not found at:', sourceFile)
       return false
     }
   }
@@ -40,7 +40,7 @@ function copyPromptFile() {
       
       // 请求时也确保文件存在（热更新）
       server.middlewares.use((req, res, next) => {
-        if (req.url?.includes('/Prompt-3.0.md') || req.url?.includes(encodeURIComponent('Prompt-3.0.md'))) {
+        if (req.url?.includes('/Prompt-1.0.md') || req.url?.includes(encodeURIComponent('Prompt-1.0.md'))) {
           doCopy()
         }
         next()
