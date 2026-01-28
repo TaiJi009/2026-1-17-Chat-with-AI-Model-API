@@ -10,158 +10,6 @@ import { parseAIResponse } from '../utils/responseParser';
 import ThinkingDisplay from './ThinkingDisplay';
 import { Message } from '../types';
 
-// 流式Markdown显示组件
-function StreamingMarkdown({ 
-  content, 
-  isStreaming, 
-  components,
-  messageId
-}: { 
-  content: string; 
-  isStreaming?: boolean;
-  components: any;
-  messageId: string;
-}) {
-  const [displayedContent, setDisplayedContent] = useState('');
-  const contentIndexRef = useRef(0);
-  const timerRef = useRef<number | null>(null);
-  const prevContentRef = useRef('');
-  const initializedMessageIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    // 当消息ID变化时，重置初始化状态（切换会话时）
-    if (initializedMessageIdRef.current !== messageId) {
-      initializedMessageIdRef.current = messageId;
-      
-      // 如果内容已存在且不在流式状态，立即设置（同步操作，避免异步问题）
-      if (content && !isStreaming) {
-        // 已保存的消息，立即设置所有状态（避免重新流式显示）
-        setDisplayedContent(content);
-        contentIndexRef.current = content.length;
-        prevContentRef.current = content;
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-        return; // 直接返回，不继续执行后续逻辑
-      } else {
-        // 重置所有状态
-        setDisplayedContent('');
-        contentIndexRef.current = 0;
-        prevContentRef.current = '';
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-      }
-    }
-
-    // 如果不在流式状态且内容已存在，直接显示（避免后续逻辑触发）
-    if (!isStreaming && content && content.length > 0) {
-      if (displayedContent !== content) {
-        setDisplayedContent(content);
-        contentIndexRef.current = content.length;
-        prevContentRef.current = content;
-      }
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      return; // 非流式状态直接返回，不执行流式逻辑
-    }
-
-    // 如果内容发生变化
-    if (content !== prevContentRef.current) {
-      const prevLength = prevContentRef.current.length;
-      const wasEmpty = prevContentRef.current === '';
-      prevContentRef.current = content;
-      
-      if (isStreaming && content) {
-        // 流式显示：只有内容从空变为有内容时才从头开始
-        if (wasEmpty && content.length > 0) {
-          // 内容首次设置，从头开始流式显示
-          contentIndexRef.current = 0;
-          setDisplayedContent('');
-        } else if (content.length < prevLength) {
-          // 内容被替换，重置
-          contentIndexRef.current = 0;
-          setDisplayedContent('');
-        }
-        // 如果内容增加了，继续从当前位置显示（contentIndexRef 保持不变）
-      } else if (!isStreaming) {
-        // 非流式：立即显示全部内容
-        setDisplayedContent(content);
-        contentIndexRef.current = content.length;
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-        return;
-      }
-    }
-
-    // 流式显示逻辑：只有当 isStreaming === true 且内容从空变为有内容时才启动
-    if (isStreaming && content && content.length > 0) {
-      // 如果当前显示的内容长度小于实际内容长度，启动定时器
-      if (contentIndexRef.current < content.length) {
-        // 清除旧的定时器（如果有）
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
-
-        timerRef.current = setInterval(() => {
-          if (contentIndexRef.current < content.length) {
-            contentIndexRef.current += 1;
-            setDisplayedContent(content.substring(0, contentIndexRef.current));
-          } else {
-            // 显示完成，清除定时器
-            if (timerRef.current) {
-              clearInterval(timerRef.current);
-              timerRef.current = null;
-            }
-          }
-        }, 30); // 每30ms显示一个字符
-      }
-    } else {
-      // 非流式状态，清除定时器
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [content, isStreaming, messageId]);
-
-  // 如果不在流式状态或内容已全部显示，直接返回完整内容
-  const contentToRender = isStreaming ? displayedContent : content;
-  const showCursor = isStreaming && displayedContent.length < content.length;
-  // 当内容为空且正在流式处理时，显示"AI正在思考..."
-  const showThinking = isStreaming && (content === '' || displayedContent.length === 0);
-
-  return (
-    <>
-      {showThinking ? (
-        <span className="text-gray-500 dark:text-gray-400 italic">AI正在思考...</span>
-      ) : (
-        <>
-          <ReactMarkdown components={components}>
-            {contentToRender}
-          </ReactMarkdown>
-          {showCursor && (
-            <span className="inline-block ml-1 text-gray-400 dark:text-gray-500 animate-pulse">·</span>
-          )}
-        </>
-      )}
-    </>
-  );
-}
-
 export default function MessageList() {
   const { state, dispatch } = useApp();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -218,49 +66,40 @@ export default function MessageList() {
     }
   }, [messages, shouldAutoScroll]);
 
-  // 监听容器高度变化（流式内容逐字更新时会改变高度），如果用户在底部则滚动
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
+      // 监听容器高度变化（AI回复内容变化时），如果用户在底部则滚动
+      useEffect(() => {
+        const container = messagesContainerRef.current;
+        if (!container) return;
 
-    const streamingMessage = messages.find(m => m.role === 'assistant' && m.isStreaming);
-    if (!streamingMessage) return;
-
-    // 使用 MutationObserver 监听 DOM 变化（流式内容逐字更新时）
-    // 检查浏览器是否支持 MutationObserver
-    if (typeof MutationObserver === 'undefined') {
-      // 降级方案：使用 setInterval 定期检查
-      const fallbackInterval = setInterval(() => {
-        const nearBottom = checkIfNearBottom();
-        if (nearBottom) {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        if (typeof MutationObserver === 'undefined') {
+          const fallbackInterval = setInterval(() => {
+            const nearBottom = checkIfNearBottom();
+            if (nearBottom) {
+              messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+            }
+          }, 100);
+          return () => clearInterval(fallbackInterval);
         }
-      }, 100);
-      return () => clearInterval(fallbackInterval);
-    }
 
-    const observer = new MutationObserver(() => {
-      // 检查是否应该自动滚动（用户在底部）
-      // 注意：这里不直接使用 shouldAutoScroll，而是在每次 DOM 变化时重新检查
-      // 因为 shouldAutoScroll 可能在滚动监听器中更新，可能存在延迟
-      const nearBottom = checkIfNearBottom();
-      if (nearBottom && messagesEndRef.current) {
-        try {
-          messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
-        } catch (e) {
-          messagesEndRef.current.scrollIntoView();
-        }
-      }
-    });
+        const observer = new MutationObserver(() => {
+          const nearBottom = checkIfNearBottom();
+          if (nearBottom && messagesEndRef.current) {
+            try {
+              messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+            } catch (e) {
+              messagesEndRef.current.scrollIntoView();
+            }
+          }
+        });
 
-    observer.observe(container, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
+        observer.observe(container, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
 
-    return () => observer.disconnect();
-  }, [messages.find(m => m.role === 'assistant' && m.isStreaming)?.id]);
+        return () => observer.disconnect();
+      }, [messages.length]);
 
   const formatTime = (timestamp: number) => {
     return new Date(timestamp).toLocaleTimeString('zh-CN', {
@@ -403,16 +242,6 @@ export default function MessageList() {
       setEditingId(null);
       setEditContent('');
 
-      // 标记消息为流式状态
-      dispatch({
-        type: 'SET_MESSAGE_STREAMING',
-        payload: {
-          conversationId: currentConversation.id,
-          messageId: assistantMessageId,
-          isStreaming: true,
-        },
-      });
-
       // 调用模型API
       const responseContent = await callModelAPI(state.apiConfig, messagesToSend);
 
@@ -426,18 +255,6 @@ export default function MessageList() {
         },
       });
       assistantMessage.content = responseContent;
-
-      // 流式显示完成后，关闭流式状态
-      setTimeout(() => {
-        dispatch({
-          type: 'SET_MESSAGE_STREAMING',
-          payload: {
-            conversationId: currentConversation.id,
-            messageId: assistantMessageId,
-            isStreaming: false,
-          },
-        });
-      }, Math.max(responseContent.length * 30, 1000));
     } catch (error) {
       console.error('重新发送失败:', error);
       const errorMessage = error instanceof Error ? error.message : '重新发送失败';
@@ -560,68 +377,39 @@ export default function MessageList() {
               </div>
             ) : (
               <>
-                {/* AI消息：如果包含思维链和回答，使用ThinkingDisplay；否则使用传统显示 */}
+                {/* AI消息：如果包含思维链和回答，使用ThinkingDisplay（已取消流式）；否则使用普通Markdown显示 */}
                 {message.role === 'assistant' && (message.thinkingChain || message.answer || message.content.match(/<思维链>|<回答>/)) ? (
                   <ThinkingDisplay
                     thinkingChain={message.thinkingChain || parseAIResponse(message.content).thinkingChain}
                     answer={message.answer || parseAIResponse(message.content).answer}
-                    isStreaming={message.isStreaming}
                     theme={state.theme}
                   />
                 ) : (
                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                    {message.role === 'assistant' && message.isStreaming ? (
-                      <StreamingMarkdown
-                        content={message.content}
-                        isStreaming={message.isStreaming}
-                        messageId={message.id}
-                        components={{
-                          code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: any }) {
-                            const match = /language-(\w+)/.exec(className || '');
-                            const inline = !match;
-                            return !inline && match ? (
-                              <SyntaxHighlighter
-                                style={state.theme === 'dark' ? vscDarkPlus : vs}
-                                language={match[1]}
-                                PreTag="div"
-                                {...(props as SyntaxHighlighterProps)}
-                              >
-                                {String(children).replace(/\n$/, '')}
-                              </SyntaxHighlighter>
-                            ) : (
-                              <code className={className} {...props}>
-                                {children}
-                              </code>
-                            );
-                          },
-                        }}
-                      />
-                    ) : (
-                      <ReactMarkdown
-                        components={{
-                          code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: any }) {
-                            const match = /language-(\w+)/.exec(className || '');
-                            const inline = !match;
-                            return !inline && match ? (
-                              <SyntaxHighlighter
-                                style={state.theme === 'dark' ? vscDarkPlus : vs}
-                                language={match[1]}
-                                PreTag="div"
-                                {...(props as SyntaxHighlighterProps)}
-                              >
-                                {String(children).replace(/\n$/, '')}
-                              </SyntaxHighlighter>
-                            ) : (
-                              <code className={className} {...props}>
-                                {children}
-                              </code>
-                            );
-                          },
-                        }}
-                      >
-                        {message.content}
-                      </ReactMarkdown>
-                    )}
+                    <ReactMarkdown
+                      components={{
+                        code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: any }) {
+                          const match = /language-(\w+)/.exec(className || '');
+                          const inline = !match;
+                          return !inline && match ? (
+                            <SyntaxHighlighter
+                              style={state.theme === 'dark' ? vscDarkPlus : vs}
+                              language={match[1]}
+                              PreTag="div"
+                              {...(props as SyntaxHighlighterProps)}
+                            >
+                              {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
                   </div>
                 )}
                 <div className="flex items-center justify-between mt-2">

@@ -1,4 +1,3 @@
-import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -12,86 +11,12 @@ interface ThinkingDisplayProps {
 }
 
 /**
- * 流式显示思维链和回答的组件
- * 先显示思维链（逐字），再显示回答（逐字）
+ * 显示思维链和回答的组件（已取消流式逐字显示）
  */
 export default function ThinkingDisplay({ thinkingChain, answer, isStreaming = false, theme }: ThinkingDisplayProps) {
-  const [displayedThinking, setDisplayedThinking] = useState('');
-  const [displayedAnswer, setDisplayedAnswer] = useState('');
-  const [isThinkingComplete, setIsThinkingComplete] = useState(false);
-  const [isAnswerComplete, setIsAnswerComplete] = useState(false);
-
-  const thinkingIndexRef = useRef(0);
-  const answerIndexRef = useRef(0);
-  const thinkingTimerRef = useRef<number | null>(null);
-  const answerTimerRef = useRef<number | null>(null);
-  const initializedRef = useRef(false);
-
-  // 初始化：检查是否有完整内容需要流式显示
-  useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
-    // 重置状态
-    thinkingIndexRef.current = 0;
-    answerIndexRef.current = 0;
-    setDisplayedThinking('');
-    setDisplayedAnswer('');
-    setIsThinkingComplete(false);
-    setIsAnswerComplete(false);
-
-    // 开始流式显示思维链
-    if (thinkingChain) {
-      const interval = 20; // 每个字符间隔20ms
-      thinkingTimerRef.current = setInterval(() => {
-        if (thinkingIndexRef.current < thinkingChain.length) {
-          thinkingIndexRef.current += 1;
-          setDisplayedThinking(thinkingChain.substring(0, thinkingIndexRef.current));
-        } else {
-          setIsThinkingComplete(true);
-          if (thinkingTimerRef.current) {
-            clearInterval(thinkingTimerRef.current);
-            thinkingTimerRef.current = null;
-          }
-        }
-      }, interval);
-    } else {
-      setIsThinkingComplete(true);
-    }
-
-    return () => {
-      if (thinkingTimerRef.current) {
-        clearInterval(thinkingTimerRef.current);
-      }
-      if (answerTimerRef.current) {
-        clearInterval(answerTimerRef.current);
-      }
-    };
-  }, [thinkingChain]);
-
-  // 思维链完成后，开始流式显示回答
-  useEffect(() => {
-    if (!isThinkingComplete || !answer || answerTimerRef.current) {
-      return;
-    }
-
-    const interval = 20; // 每个字符间隔20ms
-    answerTimerRef.current = setInterval(() => {
-      if (answerIndexRef.current < answer.length) {
-        answerIndexRef.current += 1;
-        setDisplayedAnswer(answer.substring(0, answerIndexRef.current));
-      } else {
-        setIsAnswerComplete(true);
-        if (answerTimerRef.current) {
-          clearInterval(answerTimerRef.current);
-          answerTimerRef.current = null;
-        }
-      }
-    }, interval);
-  }, [isThinkingComplete, answer]);
-
-  const showThinkingCursor = !isThinkingComplete && (isStreaming || displayedThinking.length < thinkingChain.length);
-  const showAnswerCursor = isThinkingComplete && !isAnswerComplete && (isStreaming || displayedAnswer.length < answer.length);
+  // 直接一次性展示完整内容，不再做逐字流式动画
+  const showThinkingCursor = false;
+  const showAnswerCursor = false;
 
   return (
     <div className="space-y-4">
@@ -124,7 +49,7 @@ export default function ThinkingDisplay({ thinkingChain, answer, isStreaming = f
                 },
               }}
             >
-              {displayedThinking}
+              {thinkingChain}
             </ReactMarkdown>
             {showThinkingCursor && <span className="inline-block animate-pulse text-gray-400 dark:text-gray-600 ml-1">·</span>}
           </div>
@@ -160,7 +85,7 @@ export default function ThinkingDisplay({ thinkingChain, answer, isStreaming = f
                 },
               }}
             >
-              {displayedAnswer}
+              {answer}
             </ReactMarkdown>
             {showAnswerCursor && <span className="inline-block animate-pulse text-gray-400 dark:text-gray-600 ml-1">·</span>}
           </div>

@@ -106,24 +106,9 @@ export default function MessageInput() {
         payload: { conversationId: conversationToUse.id, message: assistantMessage },
       });
 
-      // 记录发送前的消息数量，用于判断是否是第一轮对话
-      const messagesBeforeSend = conversationToUse.messages.filter(m => m.role !== 'system');
-      const isFirstRound = messagesBeforeSend.length === 0;
-
-      // 标记消息为流式状态
-      dispatch({
-        type: 'SET_MESSAGE_STREAMING',
-        payload: {
-          conversationId: conversationToUse.id,
-          messageId: assistantMessageId,
-          isStreaming: true,
-        },
-      });
-
       // Call model API
       const responseContent = await callModelAPI(state.apiConfig, messages);
 
-      // 先设置完整内容，但保持流式状态以便逐字显示
       dispatch({
         type: 'UPDATE_MESSAGE',
         payload: {
@@ -134,21 +119,10 @@ export default function MessageInput() {
       });
       assistantMessage.content = responseContent;
 
-      // 流式显示完成后，关闭流式状态
-      // 延迟一点时间确保流式动画完成
-      setTimeout(() => {
-        dispatch({
-          type: 'SET_MESSAGE_STREAMING',
-          payload: {
-            conversationId: conversationToUse.id,
-            messageId: assistantMessageId,
-            isStreaming: false,
-          },
-        });
-      }, Math.max(responseContent.length * 30, 1000)); // 根据内容长度计算时间，至少1秒
-
       // 检测第一轮对话完成并自动生成标题
       // 第一轮对话：发送前没有消息（不包括system消息），且未手动重命名
+      const messagesBeforeSend = conversationToUse.messages.filter(m => m.role !== 'system');
+      const isFirstRound = messagesBeforeSend.length === 0;
       if (isFirstRound && !conversationToUse.isManuallyRenamed) {
         const autoTitle = generateTitle(userMessage.content, assistantMessage.content);
         
