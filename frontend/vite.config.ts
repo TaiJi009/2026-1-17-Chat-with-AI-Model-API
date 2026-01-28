@@ -6,12 +6,13 @@ import { fileURLToPath } from 'url'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
-// 自定义插件：复制 系统默认提示词工程.md 到 public 目录
+// 自定义插件：复制 prompt-engineering/系统默认提示词工程.md 到 public 目录
 function copyPromptFile() {
   return {
     name: 'copy-prompt-file',
     buildStart() {
-      const sourceFile = join(__dirname, '..', '系统默认提示词工程.md')
+      // 从项目根目录下的 prompt-engineering 目录读取系统提示词文件
+      const sourceFile = join(__dirname, '..', 'prompt-engineering', '系统默认提示词工程.md')
       const targetDir = join(__dirname, 'public')
       const targetFile = join(targetDir, '系统默认提示词工程.md')
       
@@ -29,7 +30,7 @@ function copyPromptFile() {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         if (req.url?.includes('/系统默认提示词工程.md') || req.url?.includes(encodeURIComponent('系统默认提示词工程.md'))) {
-          const sourceFile = join(__dirname, '..', '系统默认提示词工程.md')
+          const sourceFile = join(__dirname, '..', 'prompt-engineering', '系统默认提示词工程.md')
           const targetDir = join(__dirname, 'public')
           const targetFile = join(targetDir, '系统默认提示词工程.md')
           
