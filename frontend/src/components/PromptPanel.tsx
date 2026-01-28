@@ -20,24 +20,22 @@ export default function PromptPanel() {
   };
 
   const handleReset = async () => {
-    if (confirm('确定要重置为默认提示词吗？')) {
-      try {
-        // 尝试从文件读取最新的默认提示词
-        const defaultPrompt = await getDefaultSystemPrompt();
-        const defaultConfig: PromptConfig = {
-          systemPrompt: defaultPrompt,
-        };
-        setSystemPrompt(defaultConfig.systemPrompt);
-        dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
-      } catch (error) {
-        // 如果读取失败，使用同步的默认值
-        const defaultPrompt = getDefaultSystemPromptSync();
-        const defaultConfig: PromptConfig = {
-          systemPrompt: defaultPrompt,
-        };
-        setSystemPrompt(defaultConfig.systemPrompt);
-        dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
-      }
+    try {
+      // 尝试从文件读取最新的默认提示词
+      const defaultPrompt = await getDefaultSystemPrompt();
+      const defaultConfig: PromptConfig = {
+        systemPrompt: defaultPrompt,
+      };
+      setSystemPrompt(defaultConfig.systemPrompt);
+      dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
+    } catch (error) {
+      // 如果读取失败，使用同步的默认值
+      const defaultPrompt = getDefaultSystemPromptSync();
+      const defaultConfig: PromptConfig = {
+        systemPrompt: defaultPrompt,
+      };
+      setSystemPrompt(defaultConfig.systemPrompt);
+      dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
     }
   };
 

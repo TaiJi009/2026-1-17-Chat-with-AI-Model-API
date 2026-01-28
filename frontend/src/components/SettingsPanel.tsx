@@ -118,22 +118,20 @@ export default function SettingsPanel() {
 
   // 重置提示词配置
   const handleResetPrompt = async () => {
-    if (confirm('确定要重置为默认提示词吗？')) {
-      try {
-        const defaultPrompt = await getDefaultSystemPrompt();
-        const defaultConfig: PromptConfig = {
-          systemPrompt: defaultPrompt,
-        };
-        setSystemPrompt(defaultConfig.systemPrompt);
-        dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
-      } catch (error) {
-        const defaultPrompt = getDefaultSystemPromptSync();
-        const defaultConfig: PromptConfig = {
-          systemPrompt: defaultPrompt,
-        };
-        setSystemPrompt(defaultConfig.systemPrompt);
-        dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
-      }
+    try {
+      const defaultPrompt = await getDefaultSystemPrompt();
+      const defaultConfig: PromptConfig = {
+        systemPrompt: defaultPrompt,
+      };
+      setSystemPrompt(defaultConfig.systemPrompt);
+      dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
+    } catch (error) {
+      const defaultPrompt = getDefaultSystemPromptSync();
+      const defaultConfig: PromptConfig = {
+        systemPrompt: defaultPrompt,
+      };
+      setSystemPrompt(defaultConfig.systemPrompt);
+      dispatch({ type: 'SET_PROMPT_CONFIG', payload: defaultConfig });
     }
   };
 
@@ -174,20 +172,18 @@ export default function SettingsPanel() {
 
   // 重置API Key
   const handleResetApi = () => {
-    if (confirm(`确定要重置 ${getProviderDisplayName(provider)} 的API Key吗？`)) {
-      const defaultKey = DEFAULT_API_KEYS[provider] || '';
-      setApiKey(defaultKey);
+    const defaultKey = DEFAULT_API_KEYS[provider] || '';
+    setApiKey(defaultKey);
+    
+    if (state.apiConfig.apiKeys?.[provider]) {
+      const updatedApiKeys = { ...state.apiConfig.apiKeys };
+      delete updatedApiKeys[provider];
       
-      if (state.apiConfig.apiKeys?.[provider]) {
-        const updatedApiKeys = { ...state.apiConfig.apiKeys };
-        delete updatedApiKeys[provider];
-        
-        const config: ApiConfig = {
-          provider: state.apiConfig.provider,
-          apiKeys: updatedApiKeys,
-        };
-        dispatch({ type: 'SET_API_CONFIG', payload: config });
-      }
+      const config: ApiConfig = {
+        provider: state.apiConfig.provider,
+        apiKeys: updatedApiKeys,
+      };
+      dispatch({ type: 'SET_API_CONFIG', payload: config });
     }
   };
 

@@ -169,9 +169,7 @@ export default function MessageInput() {
 
   const handleClear = () => {
     if (!currentConversation) return;
-    if (confirm('确定要清空当前对话吗？')) {
-      dispatch({ type: 'CLEAR_CONVERSATION', payload: currentConversation.id });
-    }
+    dispatch({ type: 'CLEAR_CONVERSATION', payload: currentConversation.id });
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {

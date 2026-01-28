@@ -84,22 +84,20 @@ export default function ApiConfigPanel() {
   };
 
   const handleReset = () => {
-    if (confirm(`确定要重置 ${getProviderDisplayName(provider)} 的API Key吗？`)) {
-      // 重置为默认值（如果有），否则清空
-      const defaultKey = DEFAULT_API_KEYS[provider] || '';
-      setApiKey(defaultKey);
+    // 重置为默认值（如果有），否则清空
+    const defaultKey = DEFAULT_API_KEYS[provider] || '';
+    setApiKey(defaultKey);
+    
+    // 如果用户已保存过该模型的API Key，需要从apiKeys中删除
+    if (state.apiConfig.apiKeys?.[provider]) {
+      const updatedApiKeys = { ...state.apiConfig.apiKeys };
+      delete updatedApiKeys[provider];
       
-      // 如果用户已保存过该模型的API Key，需要从apiKeys中删除
-      if (state.apiConfig.apiKeys?.[provider]) {
-        const updatedApiKeys = { ...state.apiConfig.apiKeys };
-        delete updatedApiKeys[provider];
-        
-        const config: ApiConfig = {
-          provider: state.apiConfig.provider,
-          apiKeys: updatedApiKeys,
-        };
-        dispatch({ type: 'SET_API_CONFIG', payload: config });
-      }
+      const config: ApiConfig = {
+        provider: state.apiConfig.provider,
+        apiKeys: updatedApiKeys,
+      };
+      dispatch({ type: 'SET_API_CONFIG', payload: config });
     }
   };
 
