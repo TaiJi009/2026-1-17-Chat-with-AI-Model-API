@@ -6,6 +6,7 @@ export interface Message {
   thinkingChain?: string; // AI的思考过程内容
   answer?: string; // AI的回答内容
   isStreaming?: boolean; // 是否正在流式输出
+  thinkingCollapsed?: boolean; // 思考过程区块是否折叠，默认 false
 }
 
 export interface Conversation {
@@ -90,4 +91,5 @@ export type AppAction =
   | { type: 'TOGGLE_SETTINGS_PANEL' }
   | { type: 'LOAD_STATE'; payload: Partial<AppState> }
   | { type: 'SET_USER'; payload: User | null }
-  | { type: 'SET_PRO_STATUS'; payload: boolean };
+  | { type: 'SET_PRO_STATUS'; payload: boolean }
+  | { type: 'TOGGLE_MESSAGE_THINKING_COLLAPSED'; payload: { conversationId: string; messageId: string } };

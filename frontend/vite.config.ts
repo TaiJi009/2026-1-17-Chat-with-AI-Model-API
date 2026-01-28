@@ -6,46 +6,44 @@ import { fileURLToPath } from 'url'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
-// 自定义插件：复制 prompt-engineering/Prompt-1.0.md 到 public 目录
+// 自定义插件：复制 prompt-engineering 下的 Prompt 文件到 public 目录
 function copyPromptFile() {
-  const sourceFile = join(__dirname, '..', 'prompt-engineering', 'Prompt-1.0.md')
   const targetDir = join(__dirname, 'public')
-  const targetFile = join(targetDir, 'Prompt-1.0.md')
-  
-  // 复制文件的辅助函数
-  const doCopy = () => {
-    if (existsSync(sourceFile)) {
+  const copies: { name: string; source: string; target: string }[] = [
+    { name: 'Prompt-1.0.md', source: join(__dirname, '..', 'prompt-engineering', 'Prompt-1.0.md'), target: join(targetDir, 'Prompt-1.0.md') },
+    { name: 'Prompt-1.0-thinking.md', source: join(__dirname, '..', 'prompt-engineering', 'Prompt-1.0-thinking.md'), target: join(targetDir, 'Prompt-1.0-thinking.md') },
+  ]
+
+  const doCopy = (entry: typeof copies[0]) => {
+    if (existsSync(entry.source)) {
       if (!existsSync(targetDir)) {
         mkdirSync(targetDir, { recursive: true })
       }
-      copyFileSync(sourceFile, targetFile)
-      console.log('✓ Copied Prompt-1.0.md to public/')
+      copyFileSync(entry.source, entry.target)
+      console.log('✓ Copied', entry.name, 'to public/')
       return true
-    } else {
-      console.warn('⚠ Prompt-1.0.md not found at:', sourceFile)
-      return false
     }
+    console.warn('⚠', entry.name, 'not found at:', entry.source)
+    return false
   }
-  
+
+  const doCopyAll = () => copies.forEach(doCopy)
+
   return {
     name: 'copy-prompt-file',
-    // 构建时复制
     buildStart() {
-      doCopy()
+      doCopyAll()
     },
-    // 开发服务器启动时也复制
     configureServer(server) {
-      // 服务器启动时立即复制一次
-      doCopy()
-      
-      // 请求时也确保文件存在（热更新）
+      doCopyAll()
       server.middlewares.use((req, res, next) => {
-        if (req.url?.includes('/Prompt-1.0.md') || req.url?.includes(encodeURIComponent('Prompt-1.0.md'))) {
-          doCopy()
+        const url = req.url ?? ''
+        if (copies.some(c => url.includes('/' + c.name) || url.includes(encodeURIComponent(c.name)))) {
+          doCopyAll()
         }
         next()
       })
-    }
+    },
   }
 }
 

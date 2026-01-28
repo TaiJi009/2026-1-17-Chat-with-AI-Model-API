@@ -419,6 +419,16 @@ export default function MessageList() {
                         answer={message.isStreaming ? parseAIResponseStreaming(message.content).answer : (message.answer ?? parseAIResponse(message.content).answer)}
                         theme={state.theme}
                         isStreaming={message.isStreaming}
+                        thinkingCollapsed={message.thinkingCollapsed ?? false}
+                        onToggleCollapse={
+                          currentConversation
+                            ? () =>
+                                dispatch({
+                                  type: 'TOGGLE_MESSAGE_THINKING_COLLAPSED',
+                                  payload: { conversationId: currentConversation.id, messageId: message.id },
+                                })
+                            : undefined
+                        }
                       />
                     ) : (
                       <div className="chat-prose max-w-none">

@@ -3,6 +3,8 @@ import type { KeyboardEvent } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { Message, Conversation } from '../types';
 import { callModelAPI } from '../utils/apiService';
+import { getThinkingSystemPrompt, getDefaultSystemPromptSync } from '../utils/defaultSystemPrompt';
+import { parseAIResponse, parseAIResponseStreaming } from '../utils/responseParser';
 import { generateTitle } from '../utils/titleGenerator';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
 import { debug } from '../utils/debug';
@@ -76,26 +78,18 @@ export default function MessageInput() {
     let assistantMessageId = '';
 
     try {
-      // Build messages array
-      const messages: Message[] = [];
-      
-      // Add system prompt if provided
-      if (state.promptConfig.systemPrompt.trim()) {
-        messages.push({
-          id: `msg-system`,
-          role: 'system',
-          content: state.promptConfig.systemPrompt,
-          timestamp: Date.now(),
-        });
-      }
+      const provider = state.apiConfig.provider;
+      const useStream = provider === 'openai' || provider === 'zhipu';
+      const history = conversationToUse.messages.filter(m => m.role !== 'system');
 
-      // Add conversation history (excluding system messages as they're already handled)
-      messages.push(...conversationToUse.messages.filter(m => m.role !== 'system'));
+      // 第一段：仅生成思考过程（专用 system + 历史 + 用户消息）
+      const systemThinking = await getThinkingSystemPrompt();
+      const messages1: Message[] = [
+        { id: 'msg-system-thinking', role: 'system', content: systemThinking, timestamp: Date.now() },
+        ...history,
+        userMessage,
+      ];
 
-      // Add new user message (no template processing)
-      messages.push(userMessage);
-
-      // Create assistant message
       assistantMessageId = `msg-${Date.now()}-assistant`;
       const assistantMessage: Message = {
         id: assistantMessageId,
@@ -110,32 +104,72 @@ export default function MessageInput() {
         payload: { conversationId: conversationToUse.id, message: assistantMessage },
       });
 
-      // Call model API (streaming for openai/zhipu when onChunk provided)
-      const provider = state.apiConfig.provider;
-      const responseContent = await (provider === 'openai' || provider === 'zhipu'
-        ? callModelAPI(state.apiConfig, messages, {
-            onChunk(content) {
+      let thinkingFull: string;
+      if (useStream) {
+        const response1 = await callModelAPI(state.apiConfig, messages1, {
+          onChunk(accumulated) {
+            const { thinkingChain } = parseAIResponseStreaming(accumulated);
+            const part = thinkingChain || accumulated.trim();
+            dispatch({
+              type: 'UPDATE_MESSAGE',
+              payload: {
+                conversationId: conversationToUse.id,
+                messageId: assistantMessageId,
+                content: '<思考过程>' + part + '</思考过程><回答></回答>',
+              },
+            });
+          },
+        });
+        const parsed1 = parseAIResponse(response1);
+        thinkingFull = parsed1.thinkingChain || response1.trim();
+      } else {
+        const response1 = await callModelAPI(state.apiConfig, messages1);
+        const parsed1 = parseAIResponse(response1);
+        thinkingFull = parsed1.thinkingChain || response1.trim();
+      }
+
+      // 第二段：以思考过程为 system 的一部分，仅生成回答（不带历史）
+      const baseSystem = state.promptConfig.systemPrompt.trim() || getDefaultSystemPromptSync();
+      const system2 = baseSystem + '\n\n【本轮的思考过程】\n' + thinkingFull;
+      const messages2: Message[] = [
+        { id: 'msg-system-answer', role: 'system', content: system2, timestamp: Date.now() },
+        { id: 'msg-user-answer-prompt', role: 'user', content: '请根据上述思考过程，仅输出 <回答>...</回答>', timestamp: Date.now() },
+      ];
+
+      try {
+        if (useStream) {
+          const response2 = await callModelAPI(state.apiConfig, messages2, {
+            onChunk(accumulatedAnswer) {
               dispatch({
                 type: 'UPDATE_MESSAGE',
                 payload: {
                   conversationId: conversationToUse.id,
                   messageId: assistantMessageId,
-                  content,
+                  content: '<思考过程>' + thinkingFull + '</思考过程><回答>' + accumulatedAnswer + '</回答>',
                 },
               });
             },
-          })
-        : callModelAPI(state.apiConfig, messages));
+          });
+          assistantMessage.content = '<思考过程>' + thinkingFull + '</思考过程><回答>' + response2 + '</回答>';
+        } else {
+          const response2 = await callModelAPI(state.apiConfig, messages2);
+          const parsed2 = parseAIResponse(response2);
+          const answerPart = parsed2.answer || response2.trim();
+          assistantMessage.content = '<思考过程>' + thinkingFull + '</思考过程><回答>' + answerPart + '</回答>';
+        }
+      } catch (stage2Error) {
+        const errMsg = stage2Error instanceof Error ? stage2Error.message : '生成回答失败';
+        assistantMessage.content = '<思考过程>' + thinkingFull + '</思考过程><回答>错误: ' + errMsg + '</回答>';
+      }
 
       dispatch({
         type: 'UPDATE_MESSAGE',
         payload: {
           conversationId: conversationToUse.id,
           messageId: assistantMessageId,
-          content: responseContent,
+          content: assistantMessage.content,
         },
       });
-      assistantMessage.content = responseContent;
       dispatch({
         type: 'SET_MESSAGE_STREAMING',
         payload: {
@@ -145,7 +179,6 @@ export default function MessageInput() {
         },
       });
 
-      // 检测第一轮对话完成并自动生成标题
       const messagesBeforeSend = conversationToUse.messages.filter(m => m.role !== 'system');
       const isFirstRound = messagesBeforeSend.length === 0;
       if (isFirstRound && !conversationToUse.isManuallyRenamed) {

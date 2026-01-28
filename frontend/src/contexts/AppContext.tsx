@@ -116,6 +116,24 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
       };
 
+    case 'TOGGLE_MESSAGE_THINKING_COLLAPSED':
+      return {
+        ...state,
+        conversations: state.conversations.map(c =>
+          c.id === action.payload.conversationId
+            ? {
+                ...c,
+                messages: c.messages.map(m =>
+                  m.id === action.payload.messageId
+                    ? { ...m, thinkingCollapsed: !(m.thinkingCollapsed ?? false) }
+                    : m
+                ),
+                updatedAt: Date.now(),
+              }
+            : c
+        ),
+      };
+
     case 'UPDATE_CONVERSATION_TITLE':
       return {
         ...state,

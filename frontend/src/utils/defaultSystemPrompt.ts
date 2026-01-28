@@ -151,3 +151,28 @@ export function getDefaultSystemPromptSync(): string {
 export function updateDefaultSystemPrompt(newPrompt: string): void {
   defaultSystemPromptText = newPrompt;
 }
+
+/** 思考过程专用提示词读取失败时的兜底文案 */
+const defaultThinkingSystemPromptFallback = '你只输出思考过程，用 <思考过程>...</思考过程> 包裹，不要输出 <回答>。';
+
+/**
+ * 获取「仅输出思考过程」的专用系统提示词
+ * 从 Prompt-1.0-thinking.md 读取，失败时使用兜底文案
+ */
+export async function getThinkingSystemPrompt(): Promise<string> {
+  try {
+    const basePath = import.meta.env.BASE_URL || '/';
+    const fileName = encodeURIComponent('Prompt-1.0-thinking.md');
+    const filePath = `${basePath}${fileName}`.replace(/\/+/g, '/');
+    const response = await fetch(filePath);
+
+    if (response.ok) {
+      const content = await response.text();
+      const trimmed = content.trim();
+      if (trimmed) return trimmed;
+    }
+  } catch (error) {
+    console.warn('无法从文件读取思考过程专用提示词，使用兜底文案:', error);
+  }
+  return defaultThinkingSystemPromptFallback;
+}
