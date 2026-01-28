@@ -11,7 +11,7 @@ interface ThinkingDisplayProps {
 }
 
 const markdownComponents = (theme: 'light' | 'dark') => ({
-  code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: unknown }) {
+  code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: any }) {
     const match = /language-(\w+)/.exec(className || '');
     const inline = !match;
     return !inline && match ? (
