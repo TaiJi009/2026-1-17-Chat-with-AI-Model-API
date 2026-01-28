@@ -1,13 +1,4 @@
-/**
- * 默认系统提示词
- * 从 Prompt-3.0.md 读取
- * 当 Prompt-3.0.md 文件发生变更时，系统的默认提示词也会同步变更
- */
-
-// 直接从 Prompt-3.0.md 导入文件内容
-// 在 Vite 中，可以通过 ?raw 后缀导入文件为字符串
-// 注意：这个值应该与 Prompt-3.0.md 的内容大致匹配，作为读取失败时的兜底默认值
-let defaultSystemPromptText = `## Role: 情感聊天机器人（Emotional Companion Bot）
+## Role: 情感聊天机器人（Emotional Companion Bot）
 
 ## Profile:
 - Role: 情感陪伴与心理支持型聊天机器人
@@ -26,8 +17,8 @@ let defaultSystemPromptText = `## Role: 情感聊天机器人（Emotional Compan
 - 在必要时，引导用户以安全、理性的方式面对现实问题
 
 ## Constraints:
-- 不以"客服""说明书""百科全书"的方式回应用户
-- 不使用说教、否定、命令式或居高临下的语言（如"你应该""你必须""这没什么"）
+- 不以“客服”“说明书”“百科全书”的方式回应用户
+- 不使用说教、否定、命令式或居高临下的语言（如“你应该”“你必须”“这没什么”）
 - 不在未回应情绪之前直接给出建议或结论
 - 不进行医学、心理或法律层面的专业诊断
 - 不制造情感操控或情感依赖关系
@@ -78,51 +69,4 @@ let defaultSystemPromptText = `## Role: 情感聊天机器人（Emotional Compan
   - 情绪被理解  
   - 情感被接住  
   - 孤独感被缓解  
-  - 更有力量继续面对现实生活`;
-
-/**
- * 获取默认系统提示词
- * 从 Prompt-3.0.md 文件读取
- * 当文件发生变更时，系统的默认提示词也会同步变更
- */
-export async function getDefaultSystemPrompt(): Promise<string> {
-  try {
-    // 尝试从 public 目录读取文件（如果在构建时已复制）
-    // 注意：需要添加 base 路径前缀
-    const basePath = import.meta.env.BASE_URL || '/';
-    // 将文件名进行URL编码
-    const fileName = encodeURIComponent('Prompt-3.0.md');
-    const filePath = `${basePath}${fileName}`.replace(/\/+/g, '/');
-    const response = await fetch(filePath);
-    
-    if (response.ok) {
-      const content = await response.text();
-      const trimmedContent = content.trim();
-      // 同步更新内置默认值，以便同步使用
-      if (trimmedContent) {
-        defaultSystemPromptText = trimmedContent;
-      }
-      return trimmedContent;
-    }
-  } catch (error) {
-    console.warn('无法从文件读取默认系统提示词，使用内置默认值:', error);
-  }
-  
-  // 如果读取失败，返回内置的默认值
-  return defaultSystemPromptText.trim();
-}
-
-/**
- * 同步获取默认系统提示词（同步版本，用于初始化）
- * 如果异步读取失败，使用内置默认值
- */
-export function getDefaultSystemPromptSync(): string {
-  return defaultSystemPromptText.trim();
-}
-
-/**
- * 更新默认系统提示词（用于同步 Prompt-3.0.md 的更改）
- */
-export function updateDefaultSystemPrompt(newPrompt: string): void {
-  defaultSystemPromptText = newPrompt;
-}
+  - 更有力量继续面对现实生活
