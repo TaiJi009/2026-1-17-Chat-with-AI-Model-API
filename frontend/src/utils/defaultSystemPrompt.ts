@@ -4,7 +4,7 @@
  * 当 Prompt-1.0.md 文件发生变更时，系统的默认提示词也会同步变更
  */
 
-// 注意：这个值应该与 Prompt-1.0.md 的内容大致匹配，作为读取失败时的兜底默认值
+// 注意：与 prompt-engineering/Prompt-1.0.md 保持完全一致，作为读取失败时的兜底默认值
 let defaultSystemPromptText = `# 🧠 Role：专家（Chat System Prompt ）
 
 ## profile
