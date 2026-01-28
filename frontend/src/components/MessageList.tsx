@@ -400,8 +400,8 @@ export default function MessageList() {
                   </div>
                 ) : (
                   <>
-                    {/* AI消息：如果包含思维链和回答，使用ThinkingDisplay（已取消流式）；否则使用普通Markdown显示 */}
-                    {message.role === 'assistant' && (message.thinkingChain || message.answer || message.content.match(/<思维链>|<回答>/)) ? (
+                    {/* AI消息：如果包含思考过程和回答，使用ThinkingDisplay（已取消流式）；否则使用普通Markdown显示 */}
+                    {message.role === 'assistant' && (message.thinkingChain || message.answer || message.content.match(/<思考过程>|<回答>/)) ? (
                       <ThinkingDisplay
                         thinkingChain={message.thinkingChain || parseAIResponse(message.content).thinkingChain}
                         answer={message.answer || parseAIResponse(message.content).answer}

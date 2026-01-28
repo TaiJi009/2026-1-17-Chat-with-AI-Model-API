@@ -10,7 +10,7 @@ interface ThinkingDisplayProps {
 }
 
 /**
- * 显示思维链和回答的组件（已取消流式逐字显示）
+ * 显示思考过程和回答的组件（已取消流式逐字显示）
  */
 export default function ThinkingDisplay({ thinkingChain, answer, theme }: ThinkingDisplayProps) {
   // 直接一次性展示完整内容，不再做逐字流式动画
@@ -19,11 +19,11 @@ export default function ThinkingDisplay({ thinkingChain, answer, theme }: Thinki
 
   return (
     <div className="space-y-4">
-      {/* 思维链部分 */}
+      {/* 思考过程部分 */}
       {thinkingChain && (
         <div className="border-l-4 border-blue-500 pl-4">
           <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
-            💭 思维链
+            💭 思考过程
           </div>
           <div className="chat-prose max-w-none text-gray-700 dark:text-gray-300">
             <ReactMarkdown
