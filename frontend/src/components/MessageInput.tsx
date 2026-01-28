@@ -5,6 +5,7 @@ import { Message, Conversation } from '../types';
 import { callModelAPI } from '../utils/apiService';
 import { generateTitle } from '../utils/titleGenerator';
 import { FiSend, FiTrash2 } from 'react-icons/fi';
+import { debug } from '../utils/debug';
 
 export default function MessageInput() {
   const { state, dispatch } = useApp();
@@ -146,6 +147,9 @@ export default function MessageInput() {
         });
       }
     } catch (error) {
+      // #region agent log
+      debug.error('MessageInput: Send message error', error, 'message-send-error');
+      // #endregion
       console.error('Error sending message:', error);
       const errorMessage = error instanceof Error ? error.message : '发送消息失败';
       

@@ -4,8 +4,13 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import paymentRoutes from './routes/payment.routes';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import { debug, setupGlobalErrorHandling } from './utils/debug';
 
 dotenv.config();
+
+// 初始化全局调试和错误处理
+setupGlobalErrorHandling();
+debug.log('后端服务启动', { nodeEnv: process.env.NODE_ENV });
 
 const app = express();
 const PORT = process.env.PORT || 3000;

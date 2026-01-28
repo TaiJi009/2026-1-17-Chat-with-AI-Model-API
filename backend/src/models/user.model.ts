@@ -23,6 +23,9 @@ export class UserModel {
     `;
     const values = [data.phone || null, data.wechat_openid || null];
     const result = await pool.query(query, values);
+    if (!result.rows[0]) {
+      throw new Error('创建用户失败');
+    }
     return result.rows[0];
   }
 
@@ -56,6 +59,9 @@ export class UserModel {
       RETURNING *
     `;
     const result = await pool.query(query, [isPro, expiresAt, id]);
+    if (!result.rows[0]) {
+      throw new Error('用户不存在或更新失败');
+    }
     return result.rows[0];
   }
 
@@ -70,6 +76,9 @@ export class UserModel {
       RETURNING *
     `;
     const result = await pool.query(query, [openid, id]);
+    if (!result.rows[0]) {
+      throw new Error('用户不存在或更新失败');
+    }
     return result.rows[0];
   }
 }

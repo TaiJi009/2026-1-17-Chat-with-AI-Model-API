@@ -1,4 +1,5 @@
 import { Message, ApiConfig } from '../types';
+import { debug } from './debug';
 
 export type ApiProvider = 'zhipu' | 'openai' | 'claude' | 'tongyi' | 'wenxin' | 'spark' | 'doubao';
 
@@ -260,30 +261,55 @@ export async function callModelAPI(
   // 兼容旧格式（如果还有apiKey字段）
   const apiKey = config.apiKeys?.[config.provider] || (config as any).apiKey || '';
   
+  // #region agent log
+  debug.trace('callAPI', { provider: config.provider, hasApiKey: !!apiKey, messageCount: messages.length }, 'api-call');
+  // #endregion
+
   if (!apiKey) {
+    // #region agent log
+    debug.error('API: No API key configured', { provider: config.provider }, 'api-no-key');
+    // #endregion
     throw new Error('API Key未配置，请在右侧面板中设置API Key');
   }
 
   try {
+    let result: string;
     switch (config.provider) {
       case 'zhipu':
-        return await callZhipuAPI(apiKey, messages);
+        result = await callZhipuAPI(apiKey, messages);
+        break;
       case 'openai':
-        return await callOpenAIAPI(apiKey, messages);
+        result = await callOpenAIAPI(apiKey, messages);
+        break;
       case 'claude':
-        return await callClaudeAPI(apiKey, messages);
+        result = await callClaudeAPI(apiKey, messages);
+        break;
       case 'tongyi':
-        return await callTongyiAPI(apiKey, messages);
+        result = await callTongyiAPI(apiKey, messages);
+        break;
       case 'wenxin':
-        return await callWenxinAPI(apiKey, messages);
+        result = await callWenxinAPI(apiKey, messages);
+        break;
       case 'spark':
-        return await callSparkAPI(apiKey, messages);
+        result = await callSparkAPI(apiKey, messages);
+        break;
       case 'doubao':
-        return await callDoubaoAPI(apiKey, messages);
+        result = await callDoubaoAPI(apiKey, messages);
+        break;
       default:
+        // #region agent log
+        debug.error('API: Unsupported provider', { provider: config.provider }, 'api-unsupported');
+        // #endregion
         throw new Error(`不支持的API提供商: ${config.provider}`);
     }
+    // #region agent log
+    debug.traceExit('callAPI', { provider: config.provider, resultLength: result.length }, 'api-call');
+    // #endregion
+    return result;
   } catch (error) {
+    // #region agent log
+    debug.error('API Call Error', { provider: config.provider, error: error instanceof Error ? error.message : String(error) }, 'api-call-error');
+    // #endregion
     if (error instanceof Error) {
       throw error;
     }

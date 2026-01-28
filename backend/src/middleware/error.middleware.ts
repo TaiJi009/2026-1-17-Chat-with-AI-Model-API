@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { debug } from '../utils/debug';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -12,6 +13,16 @@ export function errorHandler(
 ) {
   const statusCode = err.statusCode || 500;
   const message = err.message || '服务器内部错误';
+
+  // #region agent log
+  debug.error('Error Handler', {
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    path: req.path,
+    method: req.method,
+    statusCode,
+  }, 'error-handler');
+  // #endregion
 
   console.error('Error:', {
     message: err.message,

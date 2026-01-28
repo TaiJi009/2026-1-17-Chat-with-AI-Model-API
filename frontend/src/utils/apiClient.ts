@@ -1,3 +1,5 @@
+import { debug } from './debug';
+
 // API客户端配置
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -38,20 +40,64 @@ async function request<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // #region agent log
+  debug.trace('apiClient.request', { endpoint, method: options.method }, 'api-request');
+  // #endregion
+
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
     });
 
-    const data = await response.json();
+    // #region agent log
+    debug.log('API Response Status', { endpoint, status: response.status, ok: response.ok }, 'api-response');
+    // #endregion
+
+    // 安全地解析JSON响应
+    let data: ApiResponse<T>;
+    try {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        // 非JSON响应，尝试读取文本
+        const text = await response.text();
+        // #region agent log
+        debug.error('API: Non-JSON response', { endpoint, contentType, textPreview: text.substring(0, 100) }, 'api-non-json');
+        // #endregion
+        throw new Error(`服务器返回了非JSON格式: ${text.substring(0, 100)}`);
+      }
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        // #region agent log
+        debug.error('API: JSON parse error', { endpoint, error: error.message }, 'api-json-parse-error');
+        // #endregion
+        throw new Error('服务器响应格式错误');
+      }
+      // 如果是我们抛出的错误，直接重新抛出
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('解析服务器响应失败');
+    }
 
     if (!response.ok) {
+      // #region agent log
+      debug.error('API Request Failed', { endpoint, status: response.status, data }, 'api-error');
+      // #endregion
       throw new Error(data.message || '请求失败');
     }
 
+    // #region agent log
+    debug.traceExit('apiClient.request', { endpoint, success: true }, 'api-request');
+    // #endregion
+
     return data;
   } catch (error) {
+    // #region agent log
+    debug.error('API Request Exception', { endpoint, error: error instanceof Error ? error.message : String(error) }, 'api-exception');
+    // #endregion
     if (error instanceof Error) {
       throw error;
     }

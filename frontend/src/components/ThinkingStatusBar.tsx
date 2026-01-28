@@ -20,15 +20,24 @@ export default function ThinkingStatusBar() {
   }
 
   return (
-    <div className="flex items-center justify-between px-3 sm:px-4 h-7 text-xs bg-gray-50 border-b border-gray-200 text-gray-600 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300">
-      <div className="flex items-center gap-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
-        <span>思考中 · 可能需要几秒钟</span>
+    <div className="flex items-center justify-between px-3 sm:px-4 h-7 text-xs bg-gray-50 border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+      <div className="flex items-center">
+        <span className="text-gray-500 dark:text-gray-400">
+          思考中 · 可能需要几秒钟
+        </span>
       </div>
       <div className="flex items-center">
-        <span
-          className="w-3 h-3 border border-blue-500/40 border-t-blue-500 rounded-full dark:border-blue-400/40 dark:border-t-blue-400 animate-spin"
-          style={{ animationDuration: '1.4s' }}
+        <div
+          className="w-2.5 h-2.5 rounded-full animate-spin"
+          style={{
+            borderWidth: '1.5px',
+            borderStyle: 'solid',
+            borderTopColor: 'rgb(107 114 128)',
+            borderRightColor: 'transparent',
+            borderBottomColor: 'transparent',
+            borderLeftColor: 'transparent',
+            animationDuration: '1.3s',
+          }}
         />
       </div>
     </div>

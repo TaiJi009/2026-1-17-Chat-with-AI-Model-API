@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthService, LoginResponse } from '../services/authService';
 import { User } from '../types';
+import { debug } from '../utils/debug';
 
 interface AuthContextType {
   user: User | null;
@@ -22,12 +23,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 初始化时检查登录状态
   useEffect(() => {
     const initAuth = async () => {
+      // #region agent log
+      debug.trace('AuthContext.initAuth', {}, 'auth-init');
+      // #endregion
       try {
         if (AuthService.isAuthenticated()) {
+          // #region agent log
+          debug.log('AuthContext: User authenticated, fetching user data', {}, 'auth-init');
+          // #endregion
           const userData = await AuthService.getCurrentUser();
+          // #region agent log
+          debug.traceExit('AuthContext.initAuth', { user: userData?.id }, 'auth-init');
+          // #endregion
           setUser(userData);
+        } else {
+          // #region agent log
+          debug.log('AuthContext: User not authenticated', {}, 'auth-init');
+          // #endregion
         }
       } catch (error) {
+        // #region agent log
+        debug.error('AuthContext.initAuth Error', error, 'auth-init-error');
+        // #endregion
         console.error('初始化认证失败:', error);
       } finally {
         setIsLoading(false);

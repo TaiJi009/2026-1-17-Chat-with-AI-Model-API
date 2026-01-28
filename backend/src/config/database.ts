@@ -1,5 +1,6 @@
 import { Pool, PoolConfig } from 'pg';
 import dotenv from 'dotenv';
+import { debug } from '../utils/debug';
 
 dotenv.config();
 
@@ -27,8 +28,19 @@ if (process.env.DATABASE_URL) {
 const pool = new Pool(dbConfig);
 
 pool.on('error', (err) => {
+  // #region agent log
+  debug.error('Database Pool Error', err, 'db-pool-error');
+  // #endregion
   console.error('Unexpected error on idle client', err);
   process.exit(-1);
 });
+
+// #region agent log
+debug.log('Database pool initialized', { 
+  host: dbConfig.host, 
+  database: dbConfig.database,
+  max: dbConfig.max 
+}, 'db-init');
+// #endregion
 
 export default pool;

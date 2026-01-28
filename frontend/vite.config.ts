@@ -51,4 +51,10 @@ function copyPromptFile() {
 export default defineConfig({
   plugins: [react(), copyPromptFile()],
   base: '/2026-1-17-Chat-with-AI-Model-API/',
+  build: {
+    sourcemap: true, // 启用source map用于调试
+  },
+  server: {
+    sourcemapIgnoreList: false, // 不忽略source map
+  },
 })

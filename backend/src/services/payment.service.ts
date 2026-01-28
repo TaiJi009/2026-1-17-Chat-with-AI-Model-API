@@ -1,6 +1,7 @@
 import { OrderModel, Order } from '../models/order.model';
 import { UserModel } from '../models/user.model';
 import wechatPayConfig from '../config/wechat-pay';
+import { debug } from '../utils/debug';
 
 // 注意：这里使用简化的微信支付实现
 // 实际生产环境需要使用 wechatpay-node-v3 或类似库
@@ -20,6 +21,9 @@ export class PaymentService {
     userId: string,
     amount: number = 10.00
   ): Promise<PaymentOrder> {
+    // #region agent log
+    debug.trace('PaymentService.createOrder', { userId, amount }, 'payment-service-create');
+    // #endregion
     // 计算到期时间（30天后）
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
@@ -31,14 +35,25 @@ export class PaymentService {
       expires_at: expiresAt,
     });
 
+    // #region agent log
+    debug.log('PaymentService: Order created', { orderId: order.id, userId }, 'payment-order-created');
+    // #endregion
+
     // 生成微信支付订单
     // 注意：这里需要调用微信支付API生成二维码
     // 简化实现，实际需要集成微信支付SDK
     const wechatOrderId = `ORDER_${order.id}`;
+    // #region agent log
+    debug.log('PaymentService: Generating QR code', { wechatOrderId, amount }, 'payment-generate-qr');
+    // #endregion
     const qrCode = await this.generateWechatQRCode(wechatOrderId, amount);
 
     // 更新订单的微信订单号
     await OrderModel.updateStatus(order.id, 'pending', wechatOrderId);
+
+    // #region agent log
+    debug.traceExit('PaymentService.createOrder', { orderId: order.id, qrCodeLength: qrCode.length }, 'payment-service-create');
+    // #endregion
 
     return {
       orderId: order.id,
@@ -55,15 +70,44 @@ export class PaymentService {
     orderId: string,
     _amount: number
   ): Promise<string> {
+    // #region agent log
+    debug.trace('PaymentService.generateWechatQRCode', { orderId, amount: _amount, sandbox: wechatPayConfig.sandbox }, 'payment-generate-qr');
+    // #endregion
     // 实际实现应该调用微信支付统一下单API
     // 这里返回一个占位符，实际开发时需要替换为真实的API调用
     // _amount 参数保留以备将来使用
     
     if (wechatPayConfig.sandbox) {
+      // #region agent log
+      debug.log('PaymentService: Using sandbox QR code', { orderId }, 'payment-sandbox');
+      // #endregion
       // 沙箱环境：返回测试二维码
       return `https://api.mch.weixin.qq.com/sandbox/pay/qrcode?order_id=${orderId}`;
     }
 
+    // 检查微信支付配置是否完整
+    if (!wechatPayConfig.appId || !wechatPayConfig.mchId || !wechatPayConfig.apiKey) {
+      // #region agent log
+      debug.warn('PaymentService: WeChat Pay not configured, returning placeholder', { orderId }, 'payment-not-configured');
+      // #endregion
+      // 配置不完整时返回占位符，而不是抛出错误
+      // 创建一个简单的SVG占位符二维码
+      const svgPlaceholder = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+        <rect width="200" height="200" fill="#f0f0f0"/>
+        <text x="100" y="100" text-anchor="middle" font-family="Arial" font-size="14" fill="#666">
+          微信支付未配置
+        </text>
+        <text x="100" y="120" text-anchor="middle" font-family="Arial" font-size="12" fill="#999">
+          订单号: ${orderId.substring(0, 8)}...
+        </text>
+      </svg>`;
+      const base64Svg = Buffer.from(svgPlaceholder).toString('base64');
+      return `data:image/svg+xml;base64,${base64Svg}`;
+    }
+
+    // #region agent log
+    debug.error('PaymentService: WeChat Pay not implemented', { orderId }, 'payment-not-implemented');
+    // #endregion
     // 生产环境：调用微信支付统一下单API
     // 需要使用 wechatpay-node-v3 或类似库
     // 这里提供框架，需要根据微信支付文档实现
@@ -74,6 +118,14 @@ export class PaymentService {
    * 处理微信支付回调
    */
   static async handleWechatCallback(data: any): Promise<void> {
+    // 验证回调数据完整性
+    if (!data || !data.out_trade_no) {
+      // #region agent log
+      debug.error('PaymentService: Callback data incomplete', { data }, 'payment-callback-incomplete');
+      // #endregion
+      throw new Error('支付回调数据不完整');
+    }
+
     // 验证回调签名（重要！）
     // const isValid = this.verifyWechatSignature(data);
     // if (!isValid) {
@@ -81,7 +133,7 @@ export class PaymentService {
     // }
 
     const wechatOrderId = data.out_trade_no;
-    const transactionId = data.transaction_id;
+    const transactionId = data.transaction_id || null;
     const status = data.result_code === 'SUCCESS' ? 'paid' : 'failed';
 
     // 查找订单

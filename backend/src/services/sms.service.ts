@@ -1,6 +1,7 @@
 import * as tencentcloud from 'tencentcloud-sdk-nodejs';
 import smsConfig from '../config/sms';
 import pool from '../config/database';
+import { debug } from '../utils/debug';
 
 // 延迟获取客户端
 function getSmsClient() {
@@ -36,6 +37,9 @@ export class SmsService {
    * 发送验证码
    */
   static async sendCode(phone: string): Promise<string> {
+    // #region agent log
+    debug.trace('SmsService.sendCode', { phone }, 'sms-send');
+    // #endregion
     // 检查是否在1分钟内发送过
     const recentCode = await pool.query(
       `SELECT * FROM sms_codes 
@@ -45,11 +49,18 @@ export class SmsService {
     );
 
     if (recentCode.rows.length > 0) {
+      // #region agent log
+      debug.warn('SMS: Code sent too frequently', { phone }, 'sms-rate-limit');
+      // #endregion
       throw new Error('验证码发送过于频繁，请稍后再试');
     }
 
     const code = generateCode();
     const expiresAt = new Date(Date.now() + CODE_EXPIRES_MINUTES * 60 * 1000);
+
+    // #region agent log
+    debug.log('SMS: Saving code to database', { phone, codeLength: code.length }, 'sms-save');
+    // #endregion
 
     // 保存验证码到数据库
     await pool.query(
@@ -61,6 +72,9 @@ export class SmsService {
     // 如果配置了短信服务，发送短信
     const client = getSmsClient();
     if (client) {
+      // #region agent log
+      debug.log('SMS: Sending via Tencent Cloud', { phone }, 'sms-send-cloud');
+      // #endregion
       try {
         await client.SendSms({
           PhoneNumberSet: [phone],
@@ -69,7 +83,13 @@ export class SmsService {
           SignName: smsConfig.signName,
           TemplateParamSet: [code],
         });
+        // #region agent log
+        debug.traceExit('SmsService.sendCode', { phone, sent: true }, 'sms-send');
+        // #endregion
       } catch (error) {
+        // #region agent log
+        debug.error('SMS: Send failed', error, 'sms-send-error');
+        // #endregion
         console.error('短信发送失败:', error);
         // 开发环境可以继续，生产环境应该抛出错误
         if (process.env.NODE_ENV === 'production') {
@@ -77,6 +97,9 @@ export class SmsService {
         }
       }
     } else {
+      // #region agent log
+      debug.log('SMS: Development mode, code logged', { phone, code }, 'sms-dev-mode');
+      // #endregion
       // 开发环境：直接返回验证码（方便测试）
       console.log(`[开发模式] 验证码: ${code} (手机号: ${phone})`);
     }

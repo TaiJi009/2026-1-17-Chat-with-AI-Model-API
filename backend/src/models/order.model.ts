@@ -26,6 +26,9 @@ export class OrderModel {
     `;
     const values = [data.user_id, data.amount, data.expires_at];
     const result = await pool.query(query, values);
+    if (!result.rows[0]) {
+      throw new Error('创建订单失败');
+    }
     return result.rows[0];
   }
 
@@ -64,6 +67,9 @@ export class OrderModel {
       wechatTransactionId || null,
       id,
     ]);
+    if (!result.rows[0]) {
+      throw new Error('订单不存在或更新失败');
+    }
     return result.rows[0];
   }
 

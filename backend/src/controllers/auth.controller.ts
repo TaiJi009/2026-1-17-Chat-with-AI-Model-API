@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 import { phoneValidator, codeValidator, validate } from '../utils/validator';
+import { debug } from '../utils/debug';
 
 export class AuthController {
   /**
@@ -10,14 +11,23 @@ export class AuthController {
     phoneValidator,
     validate,
     async (req: Request, res: Response, next: NextFunction) => {
+      // #region agent log
+      debug.trace('AuthController.sendSms', { phone: req.body.phone }, 'auth-send-sms');
+      // #endregion
       try {
         const { phone } = req.body;
         await AuthService.sendVerificationCode(phone);
+        // #region agent log
+        debug.traceExit('AuthController.sendSms', { phone, success: true }, 'auth-send-sms');
+        // #endregion
         res.json({
           success: true,
           message: '验证码已发送',
         });
       } catch (error: any) {
+        // #region agent log
+        debug.error('AuthController.sendSms Error', { phone: req.body.phone, error: error?.message }, 'auth-send-sms-error');
+        // #endregion
         next(error);
       }
     },

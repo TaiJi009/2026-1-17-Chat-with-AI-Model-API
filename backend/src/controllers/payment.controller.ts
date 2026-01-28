@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PaymentService } from '../services/payment.service';
 import { param, validationResult } from 'express-validator';
+import { debug } from '../utils/debug';
 
 export class PaymentController {
   /**
@@ -11,8 +12,14 @@ export class PaymentController {
     res: Response,
     next: NextFunction
   ) => {
+    // #region agent log
+    debug.trace('PaymentController.createOrder', { userId: req.user?.userId }, 'payment-create');
+    // #endregion
     try {
       if (!req.user) {
+        // #region agent log
+        debug.warn('Payment: No user in request', {}, 'payment-no-user');
+        // #endregion
         return res.status(401).json({
           success: false,
           message: '未认证',
@@ -20,7 +27,13 @@ export class PaymentController {
       }
 
       const amount = parseFloat(process.env.PRO_PRICE || '10.00');
+      // #region agent log
+      debug.log('Payment: Creating order', { userId: req.user.userId, amount }, 'payment-create-order');
+      // #endregion
       const order = await PaymentService.createOrder(req.user.userId, amount);
+      // #region agent log
+      debug.traceExit('PaymentController.createOrder', { orderId: order.id }, 'payment-create');
+      // #endregion
 
       res.json({
         success: true,
@@ -28,6 +41,9 @@ export class PaymentController {
         data: order,
       });
     } catch (error: any) {
+      // #region agent log
+      debug.error('PaymentController.createOrder Error', error, 'payment-create-error');
+      // #endregion
       return next(error);
     }
   };

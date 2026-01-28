@@ -334,7 +334,12 @@ export default function MessageList() {
             <div className="relative flex-shrink-0">
               {hasStreamingAssistant && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-blue-500/40 dark:border-blue-400/40 bg-blue-500/10 dark:bg-blue-400/10 animate-pulse" />
+                  <div
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-blue-400/20 dark:border-blue-300/20"
+                    style={{
+                      animation: 'pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }}
+                  />
                 </div>
               )}
               <div className="relative w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
