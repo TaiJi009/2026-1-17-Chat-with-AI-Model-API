@@ -6,14 +6,13 @@ import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 interface ThinkingDisplayProps {
   thinkingChain: string;
   answer: string;
-  isStreaming?: boolean;
   theme: 'light' | 'dark';
 }
 
 /**
  * 显示思维链和回答的组件（已取消流式逐字显示）
  */
-export default function ThinkingDisplay({ thinkingChain, answer, isStreaming = false, theme }: ThinkingDisplayProps) {
+export default function ThinkingDisplay({ thinkingChain, answer, theme }: ThinkingDisplayProps) {
   // 直接一次性展示完整内容，不再做逐字流式动画
   const showThinkingCursor = false;
   const showAnswerCursor = false;
@@ -57,7 +56,7 @@ export default function ThinkingDisplay({ thinkingChain, answer, isStreaming = f
       )}
 
       {/* 回答部分 */}
-      {isThinkingComplete && (answer || showAnswerCursor) && (
+      {(answer || showAnswerCursor) && (
         <div>
           <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
             ✨ 回答
