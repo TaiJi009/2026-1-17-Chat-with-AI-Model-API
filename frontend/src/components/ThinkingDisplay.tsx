@@ -25,7 +25,7 @@ export default function ThinkingDisplay({ thinkingChain, answer, theme }: Thinki
           <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
             💭 思维链
           </div>
-          <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+          <div className="chat-prose max-w-none text-gray-700 dark:text-gray-300">
             <ReactMarkdown
               components={{
                 code({ className, children, ...props }) {
@@ -61,7 +61,7 @@ export default function ThinkingDisplay({ thinkingChain, answer, theme }: Thinki
           <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
             ✨ 回答
           </div>
-          <div className="prose prose-sm dark:prose-invert max-w-none">
+          <div className="chat-prose max-w-none">
             <ReactMarkdown
               components={{
                 code({ className, children, ...props }) {

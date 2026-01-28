@@ -408,7 +408,7 @@ export default function MessageList() {
                         theme={state.theme}
                       />
                     ) : (
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <div className="chat-prose max-w-none">
                         <ReactMarkdown
                           components={{
                             code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: any }) {
