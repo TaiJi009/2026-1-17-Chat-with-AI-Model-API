@@ -27,6 +27,14 @@ export interface ApiConfig {
   apiKeys: Partial<Record<'zhipu' | 'openai' | 'claude' | 'tongyi' | 'wenxin' | 'spark' | 'doubao', string>>; // 存储每个模型的API Key
 }
 
+// N8N 调用相关配置
+export interface N8NConfig {
+  url: string; // N8N Webhook 或 HTTP Request 节点地址
+  apiKey?: string; // 可选的鉴权 Key
+  method?: 'GET' | 'POST'; // 请求方法，默认 POST
+  customHeaders?: Record<string, string>; // 自定义请求头
+}
+
 // 用户相关类型
 export interface User {
   id: string;
