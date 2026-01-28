@@ -73,6 +73,8 @@ export default function MessageInput() {
     setInput('');
     setIsLoading(true);
 
+    let assistantMessageId = '';
+
     try {
       // Build messages array
       const messages: Message[] = [];
@@ -94,13 +96,12 @@ export default function MessageInput() {
       messages.push(userMessage);
 
       // Create assistant message
-      const assistantMessageId = `msg-${Date.now()}-assistant`;
+      assistantMessageId = `msg-${Date.now()}-assistant`;
       const assistantMessage: Message = {
         id: assistantMessageId,
         role: 'assistant',
         content: '',
         timestamp: Date.now(),
-        // 标记为思考中，用于在UI中显示“思考中”状态气泡
         isStreaming: true,
       };
 
@@ -109,8 +110,22 @@ export default function MessageInput() {
         payload: { conversationId: conversationToUse.id, message: assistantMessage },
       });
 
-      // Call model API
-      const responseContent = await callModelAPI(state.apiConfig, messages);
+      // Call model API (streaming for openai/zhipu when onChunk provided)
+      const provider = state.apiConfig.provider;
+      const responseContent = await (provider === 'openai' || provider === 'zhipu'
+        ? callModelAPI(state.apiConfig, messages, {
+            onChunk(content) {
+              dispatch({
+                type: 'UPDATE_MESSAGE',
+                payload: {
+                  conversationId: conversationToUse.id,
+                  messageId: assistantMessageId,
+                  content,
+                },
+              });
+            },
+          })
+        : callModelAPI(state.apiConfig, messages));
 
       dispatch({
         type: 'UPDATE_MESSAGE',
@@ -121,7 +136,6 @@ export default function MessageInput() {
         },
       });
       assistantMessage.content = responseContent;
-      // 结束思考状态
       dispatch({
         type: 'SET_MESSAGE_STREAMING',
         payload: {
@@ -132,12 +146,10 @@ export default function MessageInput() {
       });
 
       // 检测第一轮对话完成并自动生成标题
-      // 第一轮对话：发送前没有消息（不包括system消息），且未手动重命名
       const messagesBeforeSend = conversationToUse.messages.filter(m => m.role !== 'system');
       const isFirstRound = messagesBeforeSend.length === 0;
       if (isFirstRound && !conversationToUse.isManuallyRenamed) {
         const autoTitle = generateTitle(userMessage.content, assistantMessage.content);
-        
         dispatch({
           type: 'UPDATE_CONVERSATION_TITLE',
           payload: {
@@ -152,17 +164,24 @@ export default function MessageInput() {
       // #endregion
       console.error('Error sending message:', error);
       const errorMessage = error instanceof Error ? error.message : '发送消息失败';
-      
-      // Update the assistant message with error
-      const assistantMessageId = `msg-${Date.now()}-assistant`;
-      dispatch({
-        type: 'UPDATE_MESSAGE',
-        payload: {
-          conversationId: conversationToUse.id,
-          messageId: assistantMessageId,
-          content: `错误: ${errorMessage}`,
-        },
-      });
+      if (assistantMessageId) {
+        dispatch({
+          type: 'UPDATE_MESSAGE',
+          payload: {
+            conversationId: conversationToUse.id,
+            messageId: assistantMessageId,
+            content: `错误: ${errorMessage}`,
+          },
+        });
+        dispatch({
+          type: 'SET_MESSAGE_STREAMING',
+          payload: {
+            conversationId: conversationToUse.id,
+            messageId: assistantMessageId,
+            isStreaming: false,
+          },
+        });
+      }
     } finally {
       setIsLoading(false);
       if (textareaRef.current) {

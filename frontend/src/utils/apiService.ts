@@ -8,6 +8,54 @@ export interface ApiResponse {
   error?: string;
 }
 
+export interface CallModelAPIOptions {
+  onChunk?: (content: string) => void;
+}
+
+/**
+ * 解析 SSE 流，从 data: 行中取 choices[0].delta.content 并累积，每段调用 onChunk(累积结果)；流结束返回完整串。
+ */
+async function readSSEStream(
+  response: Response,
+  onChunk: (accumulated: string) => void
+): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error('Response body is not readable');
+  }
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let accumulated = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      const s = line.trim();
+      if (!s.startsWith('data: ')) continue;
+      const payload = s.slice(6).trim();
+      if (payload === '[DONE]') {
+        return accumulated;
+      }
+      try {
+        const data = JSON.parse(payload);
+        const delta = data.choices?.[0]?.delta?.content;
+        if (typeof delta === 'string') {
+          accumulated += delta;
+          onChunk(accumulated);
+        }
+      } catch {
+        // skip malformed or non-JSON lines
+      }
+    }
+  }
+  return accumulated;
+}
+
 /**
  * 调用智谱GLM API
  */
@@ -56,11 +104,52 @@ async function callZhipuAPI(apiKey: string, messages: Message[]): Promise<string
 }
 
 /**
+ * 智谱 GLM API 流式调用（SSE，与 OpenAI 格式兼容）
+ */
+async function callZhipuAPIStream(
+  apiKey: string,
+  messages: Message[],
+  onChunk: (content: string) => void
+): Promise<string> {
+  const url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+  const formattedMessages = messages
+    .filter(m => m.role !== 'system')
+    .map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.content,
+    }));
+  const systemMessage = messages.find(m => m.role === 'system');
+  const requestBody: Record<string, unknown> = {
+    model: 'glm-4',
+    messages: systemMessage
+      ? [{ role: 'system', content: systemMessage.content }, ...formattedMessages]
+      : formattedMessages,
+    stream: true,
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
+    throw new Error((error as any).error?.message || (error as any).message || 'API请求失败');
+  }
+
+  return readSSEStream(response, onChunk);
+}
+
+/**
  * 调用OpenAI API
  */
 async function callOpenAIAPI(apiKey: string, messages: Message[]): Promise<string> {
   const url = 'https://api.openai.com/v1/chat/completions';
-  
+
   const formattedMessages = messages.map(m => ({
     role: m.role === 'assistant' ? 'assistant' : m.role === 'system' ? 'system' : 'user',
     content: m.content,
@@ -87,6 +176,42 @@ async function callOpenAIAPI(apiKey: string, messages: Message[]): Promise<strin
 
   const data = await response.json();
   return data.choices?.[0]?.message?.content || '';
+}
+
+/**
+ * OpenAI API 流式调用（SSE）
+ */
+async function callOpenAIAPIStream(
+  apiKey: string,
+  messages: Message[],
+  onChunk: (content: string) => void
+): Promise<string> {
+  const url = 'https://api.openai.com/v1/chat/completions';
+  const formattedMessages = messages.map(m => ({
+    role: m.role === 'assistant' ? 'assistant' : m.role === 'system' ? 'system' : 'user',
+    content: m.content,
+  }));
+  const requestBody = {
+    model: 'gpt-3.5-turbo',
+    messages: formattedMessages,
+    stream: true,
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
+    throw new Error(error.error?.message || error.message || 'API请求失败');
+  }
+
+  return readSSEStream(response, onChunk);
 }
 
 /**
@@ -252,10 +377,12 @@ async function callDoubaoAPI(apiKey: string, messages: Message[]): Promise<strin
  * 统一的API调用接口
  * @param config API配置（提供商和密钥）
  * @param messages 消息列表
+ * @param options 可选；onChunk 在 openai/zhipu 下启用流式，每收到一段内容调用 onChunk(当前累积全文)
  */
 export async function callModelAPI(
   config: ApiConfig,
-  messages: Message[]
+  messages: Message[],
+  options?: CallModelAPIOptions
 ): Promise<string> {
   // 从apiKeys对象中获取当前provider的API key
   // 兼容旧格式（如果还有apiKey字段）
@@ -272,14 +399,20 @@ export async function callModelAPI(
     throw new Error('API Key未配置，请在右侧面板中设置API Key');
   }
 
+  const useStream = Boolean(options?.onChunk);
+
   try {
     let result: string;
     switch (config.provider) {
       case 'zhipu':
-        result = await callZhipuAPI(apiKey, messages);
+        result = useStream
+          ? await callZhipuAPIStream(apiKey, messages, options!.onChunk!)
+          : await callZhipuAPI(apiKey, messages);
         break;
       case 'openai':
-        result = await callOpenAIAPI(apiKey, messages);
+        result = useStream
+          ? await callOpenAIAPIStream(apiKey, messages, options!.onChunk!)
+          : await callOpenAIAPI(apiKey, messages);
         break;
       case 'claude':
         result = await callClaudeAPI(apiKey, messages);

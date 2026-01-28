@@ -182,6 +182,7 @@ export default function MessageList() {
     }
 
     setIsResending(true);
+    let assistantMessageId = '';
 
     try {
       // 1. 获取要保留的消息（该消息及之前的所有消息）
@@ -225,7 +226,7 @@ export default function MessageList() {
       messagesToSend.push(...messagesToKeep.filter(m => m.role !== 'system'));
 
       // 创建新的AI回复消息（先作为“思考中”气泡）
-      const assistantMessageId = `msg-${Date.now()}-assistant`;
+      assistantMessageId = `msg-${Date.now()}-assistant`;
       const assistantMessage: Message = {
         id: assistantMessageId,
         role: 'assistant',
@@ -239,14 +240,25 @@ export default function MessageList() {
         payload: { conversationId: currentConversation.id, message: assistantMessage },
       });
 
-      // 先清除编辑状态，让消息恢复到正常显示
       setEditingId(null);
       setEditContent('');
 
-      // 调用模型API
-      const responseContent = await callModelAPI(state.apiConfig, messagesToSend);
+      const provider = state.apiConfig.provider;
+      const responseContent = await (provider === 'openai' || provider === 'zhipu'
+        ? callModelAPI(state.apiConfig, messagesToSend, {
+            onChunk(content) {
+              dispatch({
+                type: 'UPDATE_MESSAGE',
+                payload: {
+                  conversationId: currentConversation.id,
+                  messageId: assistantMessageId,
+                  content,
+                },
+              });
+            },
+          })
+        : callModelAPI(state.apiConfig, messagesToSend));
 
-      // Update assistant message with response
       dispatch({
         type: 'UPDATE_MESSAGE',
         payload: {
@@ -256,7 +268,6 @@ export default function MessageList() {
         },
       });
       assistantMessage.content = responseContent;
-      // 结束思考状态
       dispatch({
         type: 'SET_MESSAGE_STREAMING',
         payload: {
@@ -268,24 +279,26 @@ export default function MessageList() {
     } catch (error) {
       console.error('重新发送失败:', error);
       const errorMessage = error instanceof Error ? error.message : '重新发送失败';
-      
-      // 清除编辑状态
       setEditingId(null);
       setEditContent('');
-      
-      const assistantMessageId = `msg-${Date.now()}-assistant`;
-      dispatch({
-        type: 'ADD_MESSAGE',
-        payload: {
-          conversationId: currentConversation.id,
-          message: {
-            id: assistantMessageId,
-            role: 'assistant',
+      if (assistantMessageId) {
+        dispatch({
+          type: 'UPDATE_MESSAGE',
+          payload: {
+            conversationId: currentConversation.id,
+            messageId: assistantMessageId,
             content: `错误: ${errorMessage}`,
-            timestamp: Date.now(),
           },
-        },
-      });
+        });
+        dispatch({
+          type: 'SET_MESSAGE_STREAMING',
+          payload: {
+            conversationId: currentConversation.id,
+            messageId: assistantMessageId,
+            isStreaming: false,
+          },
+        });
+      }
     } finally {
       setIsResending(false);
     }
@@ -387,9 +400,8 @@ export default function MessageList() {
               </div>
             ) : (
               <>
-                {/* AI 消息的展示逻辑 */}
-                {message.role === 'assistant' && message.isStreaming ? (
-                  // 思考中气泡：轻量文本 + 动画小圆点
+                {/* AI 消息的展示逻辑：流式时无内容显示思考中，有内容则边收边显 */}
+                {message.role === 'assistant' && message.isStreaming && !message.content ? (
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                     <span className="text-xs font-medium">AI 正在思考你的问题</span>
                     <span className="flex items-center gap-1">
