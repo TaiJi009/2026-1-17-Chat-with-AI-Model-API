@@ -59,20 +59,6 @@ let defaultSystemPromptText = `## Role: 情感聊天机器人（Emotional Compan
    当涉及极端痛苦、自我伤害或绝望倾向时，保持冷静与关怀，并鼓励用户寻求现实世界的支持。
 
 ## OutputFormat:
-【情感回应结构】
-
-- **情绪识别**  
-  <用一句话概括你对用户当前情绪的理解>
-
-- **情绪确认与共鸣**  
-  <说明这种情绪在其处境下是可以理解的>
-
-- **陪伴式表达**  
-  <表达你愿意倾听与陪伴，而不强迫解决问题>
-
-- **温和引导（可选）**  
-  <以问题或建议的形式，引导用户继续表达或思考>
-
 【最终目标】
 - 让用户在对话结束时，至少获得以下之一：
   - 情绪被理解  
@@ -98,6 +84,9 @@ let defaultSystemPromptText = `## Role: 情感聊天机器人（Emotional Compan
  * 当文件发生变更时，系统的默认提示词也会同步变更
  */
 export async function getDefaultSystemPrompt(): Promise<string> {
+  // #region agent log
+  fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'defaultSystemPrompt.ts:100',message:'getDefaultSystemPrompt called',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   try {
     // 尝试从 public 目录读取文件（如果在构建时已复制）
     // 注意：需要添加 base 路径前缀
@@ -105,11 +94,20 @@ export async function getDefaultSystemPrompt(): Promise<string> {
     // 将文件名进行URL编码
     const fileName = encodeURIComponent('Prompt-3.0.md');
     const filePath = `${basePath}${fileName}`.replace(/\/+/g, '/');
+    // #region agent log
+    fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'defaultSystemPrompt.ts:107',message:'Fetching file',data:{basePath,fileName,filePath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     const response = await fetch(filePath);
+    // #region agent log
+    fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'defaultSystemPrompt.ts:110',message:'Fetch response',data:{ok:response.ok,status:response.status,statusText:response.statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     
     if (response.ok) {
       const content = await response.text();
       const trimmedContent = content.trim();
+      // #region agent log
+      fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'defaultSystemPrompt.ts:115',message:'File content received',data:{contentLength:content.length,trimmedLength:trimmedContent.length,contentPreview:trimmedContent.substring(0,100),hasOutputFormat:trimmedContent.includes('输出格式要求')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       // 同步更新内置默认值，以便同步使用
       if (trimmedContent) {
         defaultSystemPromptText = trimmedContent;
@@ -117,11 +115,18 @@ export async function getDefaultSystemPrompt(): Promise<string> {
       return trimmedContent;
     }
   } catch (error) {
+    // #region agent log
+    fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'defaultSystemPrompt.ts:122',message:'Fetch error',data:{error:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     console.warn('无法从文件读取默认系统提示词，使用内置默认值:', error);
   }
   
   // 如果读取失败，返回内置的默认值
-  return defaultSystemPromptText.trim();
+  const fallbackContent = defaultSystemPromptText.trim();
+  // #region agent log
+  fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'defaultSystemPrompt.ts:128',message:'Returning fallback',data:{fallbackLength:fallbackContent.length,fallbackPreview:fallbackContent.substring(0,100),hasOutputFormat:fallbackContent.includes('输出格式要求')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  return fallbackContent;
 }
 
 /**

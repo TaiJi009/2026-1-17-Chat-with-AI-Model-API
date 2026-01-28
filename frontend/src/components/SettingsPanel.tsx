@@ -47,9 +47,17 @@ export default function SettingsPanel() {
     let syncInterval: number | null = null;
 
     const checkAndSyncPrompt = async () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SettingsPanel.tsx:49',message:'checkAndSyncPrompt called',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       try {
         const defaultPrompt = await getDefaultSystemPrompt();
         const currentContent = defaultPrompt.trim();
+        const lastContent = lastFileContentRef.current;
+        const currentConfig = state.promptConfig.systemPrompt.trim();
+        // #region agent log
+        fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SettingsPanel.tsx:55',message:'Content comparison',data:{currentLength:currentContent.length,lastLength:lastContent.length,configLength:currentConfig.length,currentPreview:currentContent.substring(0,50),lastPreview:lastContent.substring(0,50),configPreview:currentConfig.substring(0,50),isDifferentFromLast:currentContent!==lastContent,isDifferentFromConfig:currentContent!==currentConfig,hasOutputFormat:currentContent.includes('输出格式要求')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         
         // 如果内容有变化，且与当前配置不同，则自动同步
         if (currentContent && 
@@ -60,15 +68,31 @@ export default function SettingsPanel() {
           const config: PromptConfig = {
             systemPrompt: defaultPrompt,
           };
+          // #region agent log
+          fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SettingsPanel.tsx:63',message:'Dispatching SET_PROMPT_CONFIG',data:{configLength:config.systemPrompt.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
           dispatch({ type: 'SET_PROMPT_CONFIG', payload: config });
           // 更新本地状态
           setSystemPrompt(defaultPrompt);
+          // #region agent log
+          fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SettingsPanel.tsx:68',message:'Sync completed',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
           console.log('✓ 已自动同步 Prompt-3.0.md 的最新内容');
         } else if (lastFileContentRef.current === '') {
           // 初始化时记录当前内容
           lastFileContentRef.current = currentContent;
+          // #region agent log
+          fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SettingsPanel.tsx:72',message:'Initial content recorded',data:{contentLength:currentContent.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
+        } else {
+          // #region agent log
+          fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SettingsPanel.tsx:76',message:'No sync needed',data:{reason:currentContent===lastFileContentRef.current?'same as last':currentContent===state.promptConfig.systemPrompt.trim()?'same as config':'other'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
         }
       } catch (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7268/ingest/2ea31336-ca09-4483-9da3-87c22c9d234b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SettingsPanel.tsx:80',message:'checkAndSyncPrompt error',data:{error:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         // 静默失败，不影响正常使用
       }
     };
