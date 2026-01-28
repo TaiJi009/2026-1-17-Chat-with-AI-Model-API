@@ -1,12 +1,12 @@
 /**
  * 默认系统提示词
- * 从 系统默认提示词工程.md 读取
- * 当"系统默认提示词工程.md"文件发生变更时，系统的默认提示词也会同步变更
+ * 从 Prompt-1.0.md 读取
+ * 当 Prompt-1.0.md 文件发生变更时，系统的默认提示词也会同步变更
  */
 
-// 直接从 系统默认提示词工程.md 导入文件内容
+// 直接从 Prompt-1.0.md 导入文件内容
 // 在 Vite 中，可以通过 ?raw 后缀导入文件为字符串
-// 注意：这个值应该与 系统默认提示词工程.md 文件内容一致
+// 注意：这个值应该与 Prompt-1.0.md 文件内容一致
 let defaultSystemPromptText = `# 🧠 Chat System Prompt 
 V 1.0
 
@@ -100,7 +100,7 @@ V 1.0
 
 /**
  * 获取默认系统提示词
- * 从 系统默认提示词工程.md 文件读取
+ * 从 Prompt-1.0.md 文件读取
  * 当文件发生变更时，系统的默认提示词也会同步变更
  */
 export async function getDefaultSystemPrompt(): Promise<string> {
@@ -108,8 +108,8 @@ export async function getDefaultSystemPrompt(): Promise<string> {
     // 尝试从 public 目录读取文件（如果在构建时已复制）
     // 注意：需要添加 base 路径前缀
     const basePath = import.meta.env.BASE_URL || '/';
-    // 将文件名进行URL编码，支持中文文件名
-    const fileName = encodeURIComponent('系统默认提示词工程.md');
+    // 将文件名进行URL编码
+    const fileName = encodeURIComponent('Prompt-1.0.md');
     const filePath = `${basePath}${fileName}`.replace(/\/+/g, '/');
     const response = await fetch(filePath);
     
@@ -139,7 +139,7 @@ export function getDefaultSystemPromptSync(): string {
 }
 
 /**
- * 更新默认系统提示词（用于同步 系统默认提示词工程.md 的更改）
+ * 更新默认系统提示词（用于同步 Prompt-1.0.md 的更改）
  */
 export function updateDefaultSystemPrompt(newPrompt: string): void {
   defaultSystemPromptText = newPrompt;
