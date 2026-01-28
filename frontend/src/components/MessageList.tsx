@@ -6,7 +6,7 @@ import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import { useApp } from '../contexts/AppContext';
 import { FiUser, FiMessageCircle, FiCopy, FiCheck, FiEdit2, FiSend, FiX } from 'react-icons/fi';
 import { callModelAPI } from '../utils/apiService';
-import { parseAIResponse } from '../utils/responseParser';
+import { parseAIResponse, parseAIResponseStreaming } from '../utils/responseParser';
 import ThinkingDisplay from './ThinkingDisplay';
 import { Message } from '../types';
 
@@ -412,12 +412,13 @@ export default function MessageList() {
                   </div>
                 ) : (
                   <>
-                    {/* AI消息：如果包含思考过程和回答，使用ThinkingDisplay（已取消流式）；否则使用普通Markdown显示 */}
-                    {message.role === 'assistant' && (message.thinkingChain || message.answer || message.content.match(/<思考过程>|<回答>/)) ? (
+                    {/* AI消息：若含思考/回答标签则固定用 ThinkingDisplay，流式时用 parseAIResponseStreaming 驱动两段 */}
+                    {message.role === 'assistant' && (message.thinkingChain != null || message.answer != null || message.content.match(/<思考过程>|<回答>/)) ? (
                       <ThinkingDisplay
-                        thinkingChain={message.thinkingChain || parseAIResponse(message.content).thinkingChain}
-                        answer={message.answer || parseAIResponse(message.content).answer}
+                        thinkingChain={message.isStreaming ? parseAIResponseStreaming(message.content).thinkingChain : (message.thinkingChain ?? parseAIResponse(message.content).thinkingChain)}
+                        answer={message.isStreaming ? parseAIResponseStreaming(message.content).answer : (message.answer ?? parseAIResponse(message.content).answer)}
                         theme={state.theme}
+                        isStreaming={message.isStreaming}
                       />
                     ) : (
                       <div className="chat-prose max-w-none">
