@@ -27,10 +27,6 @@ export default function MessageList() {
 
   const messages = currentConversation?.messages || [];
 
-  const hasStreamingAssistant = messages.some(
-    m => m.role === 'assistant' && m.isStreaming
-  );
-
   // 检查是否在底部附近（距离底部100px内）
   const checkIfNearBottom = () => {
     if (!messagesContainerRef.current) return false;
@@ -331,20 +327,8 @@ export default function MessageList() {
           }`}
         >
           {message.role === 'assistant' && (
-            <div className="relative flex-shrink-0">
-              {hasStreamingAssistant && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-blue-400/20 dark:border-blue-300/20"
-                    style={{
-                      animation: 'pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    }}
-                  />
-                </div>
-              )}
-              <div className="relative w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
-                <FiMessageCircle className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
-              </div>
+            <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
+              <FiMessageCircle className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
             </div>
           )}
 
