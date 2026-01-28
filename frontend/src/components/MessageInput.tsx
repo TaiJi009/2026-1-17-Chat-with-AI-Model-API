@@ -99,6 +99,8 @@ export default function MessageInput() {
         role: 'assistant',
         content: '',
         timestamp: Date.now(),
+        // 标记为思考中，用于在UI中显示“思考中”状态气泡
+        isStreaming: true,
       };
 
       dispatch({
@@ -118,6 +120,15 @@ export default function MessageInput() {
         },
       });
       assistantMessage.content = responseContent;
+      // 结束思考状态
+      dispatch({
+        type: 'SET_MESSAGE_STREAMING',
+        payload: {
+          conversationId: conversationToUse.id,
+          messageId: assistantMessageId,
+          isStreaming: false,
+        },
+      });
 
       // 检测第一轮对话完成并自动生成标题
       // 第一轮对话：发送前没有消息（不包括system消息），且未手动重命名

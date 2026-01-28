@@ -224,13 +224,14 @@ export default function MessageList() {
       // 添加对话历史（排除system消息）
       messagesToSend.push(...messagesToKeep.filter(m => m.role !== 'system'));
 
-      // 创建新的AI回复消息
+      // 创建新的AI回复消息（先作为“思考中”气泡）
       const assistantMessageId = `msg-${Date.now()}-assistant`;
       const assistantMessage: Message = {
         id: assistantMessageId,
         role: 'assistant',
         content: '',
         timestamp: Date.now(),
+        isStreaming: true,
       };
 
       dispatch({
@@ -255,6 +256,15 @@ export default function MessageList() {
         },
       });
       assistantMessage.content = responseContent;
+      // 结束思考状态
+      dispatch({
+        type: 'SET_MESSAGE_STREAMING',
+        payload: {
+          conversationId: currentConversation.id,
+          messageId: assistantMessageId,
+          isStreaming: false,
+        },
+      });
     } catch (error) {
       console.error('重新发送失败:', error);
       const errorMessage = error instanceof Error ? error.message : '重新发送失败';
@@ -377,40 +387,55 @@ export default function MessageList() {
               </div>
             ) : (
               <>
-                {/* AI消息：如果包含思维链和回答，使用ThinkingDisplay（已取消流式）；否则使用普通Markdown显示 */}
-                {message.role === 'assistant' && (message.thinkingChain || message.answer || message.content.match(/<思维链>|<回答>/)) ? (
-                  <ThinkingDisplay
-                    thinkingChain={message.thinkingChain || parseAIResponse(message.content).thinkingChain}
-                    answer={message.answer || parseAIResponse(message.content).answer}
-                    theme={state.theme}
-                  />
-                ) : (
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <ReactMarkdown
-                      components={{
-                        code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: any }) {
-                          const match = /language-(\w+)/.exec(className || '');
-                          const inline = !match;
-                          return !inline && match ? (
-                            <SyntaxHighlighter
-                              style={state.theme === 'dark' ? vscDarkPlus : vs}
-                              language={match[1]}
-                              PreTag="div"
-                              {...(props as SyntaxHighlighterProps)}
-                            >
-                              {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                      }}
-                    >
-                      {message.content}
-                    </ReactMarkdown>
+                {/* AI 消息的展示逻辑 */}
+                {message.role === 'assistant' && message.isStreaming ? (
+                  // 思考中气泡：轻量文本 + 动画小圆点
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                    <span className="text-xs font-medium">AI 正在思考你的问题</span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 dark:bg-blue-300 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-300 dark:bg-blue-200 animate-pulse" />
+                    </span>
                   </div>
+                ) : (
+                  <>
+                    {/* AI消息：如果包含思维链和回答，使用ThinkingDisplay（已取消流式）；否则使用普通Markdown显示 */}
+                    {message.role === 'assistant' && (message.thinkingChain || message.answer || message.content.match(/<思维链>|<回答>/)) ? (
+                      <ThinkingDisplay
+                        thinkingChain={message.thinkingChain || parseAIResponse(message.content).thinkingChain}
+                        answer={message.answer || parseAIResponse(message.content).answer}
+                        theme={state.theme}
+                      />
+                    ) : (
+                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <ReactMarkdown
+                          components={{
+                            code({ className, children, ...props }: { className?: string; children?: React.ReactNode; [key: string]: any }) {
+                              const match = /language-(\w+)/.exec(className || '');
+                              const inline = !match;
+                              return !inline && match ? (
+                                <SyntaxHighlighter
+                                  style={state.theme === 'dark' ? vscDarkPlus : vs}
+                                  language={match[1]}
+                                  PreTag="div"
+                                  {...(props as SyntaxHighlighterProps)}
+                                >
+                                  {String(children).replace(/\n$/, '')}
+                                </SyntaxHighlighter>
+                              ) : (
+                                <code className={className} {...props}>
+                                  {children}
+                                </code>
+                              );
+                            },
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
+                  </>
                 )}
                 <div className="flex items-center justify-between mt-2">
                   <div

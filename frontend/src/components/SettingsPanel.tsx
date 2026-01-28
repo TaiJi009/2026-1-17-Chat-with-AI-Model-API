@@ -42,7 +42,7 @@ export default function SettingsPanel() {
   // 用于跟踪上次检查的文件内容，避免重复更新
   const lastFileContentRef = useRef<string>('');
 
-  // 自动同步 Prompt-1.0.md 文件内容
+  // 自动同步 Prompt-2.0.md 文件内容
   useEffect(() => {
     let syncInterval: number | null = null;
 
@@ -63,7 +63,7 @@ export default function SettingsPanel() {
           dispatch({ type: 'SET_PROMPT_CONFIG', payload: config });
           // 更新本地状态
           setSystemPrompt(defaultPrompt);
-          console.log('✓ 已自动同步 Prompt-1.0.md 的最新内容');
+          console.log('✓ 已自动同步 Prompt-2.0.md 的最新内容');
         } else if (lastFileContentRef.current === '') {
           // 初始化时记录当前内容
           lastFileContentRef.current = currentContent;
@@ -266,7 +266,7 @@ export default function SettingsPanel() {
                   用于定义AI的角色、行为和边界。系统提示词会在每次对话开始时发送给AI模型。
                   <br />
                   <span className="text-blue-600 dark:text-blue-400">
-                    💡 默认提示词来自 <code>Prompt-1.0.md</code>，当该文件发生变更时，点击重置按钮可同步最新版本。
+                    💡 默认提示词来自 <code>Prompt-2.0.md</code>（位于 <code>prompt-engineering/</code> 目录），当该文件发生变更时，点击重置按钮可同步最新版本。
                   </span>
                 </p>
               </div>

@@ -101,7 +101,7 @@ export default function PromptPanel() {
             用于定义AI的角色、行为和边界。系统提示词会在每次对话开始时发送给AI模型。
             <br />
             <span className="text-blue-600 dark:text-blue-400">
-              💡 默认提示词来自 <code>Prompt-1.0.md</code>，当该文件发生变更时，点击重置按钮可同步最新版本。
+              💡 默认提示词来自 <code>Prompt-2.0.md</code>（位于 <code>prompt-engineering/</code> 目录），当该文件发生变更时，点击重置按钮可同步最新版本。
             </span>
           </p>
         </div>
