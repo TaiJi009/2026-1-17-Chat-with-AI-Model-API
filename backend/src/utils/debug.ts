@@ -58,13 +58,13 @@ export const debug = {
     }
   },
 
-  warn: (message: string, data?: any) => {
+  warn: (message: string, data?: any, hypothesisId?: string) => {
     if (DEBUG_ENABLED) {
       const logData = {
         location: 'backend',
         message,
         data: data || {},
-        hypothesisId: 'warning',
+        hypothesisId: hypothesisId || 'warning',
         runId: 'run1',
       };
       sendLog(logData);
@@ -91,7 +91,7 @@ export function setupGlobalErrorHandling() {
   if (!DEBUG_ENABLED) return;
 
   // 捕获未处理的Promise拒绝
-  process.on('unhandledRejection', (reason, promise) => {
+  process.on('unhandledRejection', (reason, _promise) => {
     debug.error('Unhandled Promise Rejection', reason, 'unhandled-rejection');
   });
 

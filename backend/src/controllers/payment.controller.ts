@@ -32,7 +32,7 @@ export class PaymentController {
       // #endregion
       const order = await PaymentService.createOrder(req.user.userId, amount);
       // #region agent log
-      debug.traceExit('PaymentController.createOrder', { orderId: order.id }, 'payment-create');
+      debug.traceExit('PaymentController.createOrder', { orderId: order.orderId }, 'payment-create');
       // #endregion
 
       res.json({
